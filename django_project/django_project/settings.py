@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'asymmetric_jwt_auth',
+    'certbot_django.server',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
