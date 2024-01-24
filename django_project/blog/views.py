@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.views.generic import (
@@ -9,6 +10,8 @@ from django.views.generic import (
     DeleteView
 )
 from .models import Post
+from .forms import Upload
+from .models import clothingStyles, clothingCategories, userClothes
 
 
 def home(request):
@@ -75,7 +78,17 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
             return True
         return False
 
+class UploadView(LoginRequiredMixin, CreateView):
+    model = userClothes
+    fields = ['name','category','style','color']
+
+    def form_valid(self, form):
+        form.instance.bloguser = self.request.user
+        return super().form_valid(form)
+
 
 def about(request):
     return render(request, 'blog/about.html', {'title': 'About'})
 
+def list(request):
+    return render(request, 'main/list.html', {'title': 'list'})
