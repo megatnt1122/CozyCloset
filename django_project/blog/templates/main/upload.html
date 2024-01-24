@@ -11,7 +11,7 @@
 	}
 </style>
 
-<form method="post" action="/upload/">
+<form method="post" enctype="multipart/form-data action="/upload/">
 	{% csrf_token %}
 	{{form.as_p}}
 	<button type="submit", name="Upload">Upload</button>

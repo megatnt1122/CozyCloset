@@ -80,7 +80,7 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 class UploadView(LoginRequiredMixin, CreateView):
     model = userClothes
-    fields = ['name','category','style','color']
+    fields = ['name','category','style','color','image']
 
     def form_valid(self, form):
         form.instance.bloguser = self.request.user
