@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.views.generic import (
@@ -77,11 +78,22 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
             return True
         return False
 
+class UploadView(LoginRequiredMixin, CreateView):
+    model = userClothes
+    fields = ['name','category','style','color','image']
+
+    def form_valid(self, form):
+        form.instance.bloguser = self.request.user
+        return super().form_valid(form)
+
 
 def about(request):
     return render(request, 'blog/about.html', {'title': 'About'})
 
 def list(request):
+<<<<<<< HEAD
+    return render(request, 'main/list.html', {'title': 'list'})
+=======
     return render(request, 'main/list.html', {'title': 'list'})
 
 def upload(response):
@@ -103,3 +115,4 @@ def upload(response):
 	else:
 		form = Upload()
 	return render(response, "main/upload.html", {"form":form})
+>>>>>>> main
