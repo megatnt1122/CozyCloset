@@ -92,3 +92,6 @@ def about(request):
 
 def list(request):
     return render(request, 'main/list.html', {'title': 'list'})
+
+def your_closet(request):
+    return render(request, 'blog/your_closet.html', {'title': 'Your CozyCloset'})
