@@ -40,3 +40,15 @@ def profile(request):
     }
 
     return render(request, 'users/profile.html', context)
+
+@login_required
+def your_closet(request):
+    u_form = UserUpdateForm(instance=request.user)
+    p_form = ProfileUpdateForm(instance=request.user.profile)
+
+    context = {
+        'u_form': u_form,
+        'p_form': p_form
+    }
+
+    return render(request, 'blog/your_closet.html', context)
