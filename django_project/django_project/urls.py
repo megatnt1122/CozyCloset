@@ -29,6 +29,7 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(template_name='users/logout.html'), name='logout'),
     path('', include('blog.urls')),
     path('your_closet/', user_views.your_closet, name='your_closet'),
+    path('add_closet/', user_views.add_closet, name='add_closet'),
 ]
 
 if settings.DEBUG:

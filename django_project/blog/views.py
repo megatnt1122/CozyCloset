@@ -94,4 +94,7 @@ def list(request):
     return render(request, 'main/list.html', {'title': 'list'})
 
 def your_closet(request):
-    return render(request, 'blog/your_closet.html', {'title': 'Your CozyCloset'})
+    return render(request, 'user/your_closet.html', {'title': 'Your CozyCloset'})
+    
+def add_closet(request):
+    return render(request, 'user/add_closet.html', {'title': 'add closet'})

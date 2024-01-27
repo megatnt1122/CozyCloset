@@ -51,4 +51,16 @@ def your_closet(request):
         'p_form': p_form
     }
 
-    return render(request, 'blog/your_closet.html', context)
+    return render(request, 'users/your_closet.html', context)
+
+@login_required
+def add_closet(request):
+    u_form = UserUpdateForm(instance=request.user)
+    p_form = ProfileUpdateForm(instance=request.user.profile)
+
+    context = {
+        'u_form': u_form,
+        'p_form': p_form
+    }
+
+    return render(request, 'users/add_closet.html', context)

@@ -40,6 +40,11 @@ class colors(models.Model):
 	def __str__(self):
 		return self.color
 
+class closet(models.Model):
+        closet = models.CharField(max_length=100)
+
+        def __str__(self):
+                return self.closet
 
 class userClothes(models.Model):
 	name = models.CharField(max_length=100, default='')
@@ -65,3 +70,5 @@ class userClothes(models.Model):
 
 	def get_absolute_url(self):
 		return 'https://4ch.mooo.com:8000/upload/'
+
+## Might need to make a closet class to have many in database

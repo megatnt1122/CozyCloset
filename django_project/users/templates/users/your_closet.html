@@ -3,4 +3,5 @@
 	<h1>Welcome To Your CozyCloset</h1>
 	<img class="rounded-circle account-img" src="{{ user.profile.image.url }}">
 		<h2 class="account-heading">{{ user.username }}'s Closets</h2>
+		<a class="nav-item nav-link" href="{% url 'add_closet' %}">Create Closet</a>
 {% endblock content %}
