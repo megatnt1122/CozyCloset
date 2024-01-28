@@ -21,11 +21,11 @@ class Profile(models.Model):
             img.save(self.image.path)
 
 class Closet(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.ImageField(default='C.png', upload_to='closet_pics')
+    closet = models.OneToOneField(Closet, on_delete=models.CASCADE)
+    closet_image = models.ImageField(default='C.png', upload_to='closet_pics')
 
     def __str__(self):
-        return f'{self.user.username} Closet'
+        return f'{self.closet.username} Closet'
 
     def save(self, *args, **kwargs):
         super(Closet, self).save(*args, **kwargs)

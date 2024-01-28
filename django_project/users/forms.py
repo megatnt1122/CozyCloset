@@ -22,3 +22,14 @@ class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['image']
+
+class ClosetForm(forms.ModelForm):
+    class Meta:
+        model = Closet
+        fields = ['closet']
+
+class ClosetUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Closet
+        fields = ['closet_image']
+        
