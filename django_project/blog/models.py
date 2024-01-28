@@ -43,7 +43,7 @@ class colors(models.Model):
 
 
 class userClothes(models.Model):
-	name = models.CharField(max_length=100, default='')
+	name = models.CharField(max_length=25, default='')
 	category = models.ForeignKey(clothingCategories, on_delete=models.CASCADE)
 	style = models.ForeignKey(clothingStyles, on_delete=models.CASCADE)
 	color = models.ForeignKey(colors, on_delete=models.CASCADE)
@@ -57,15 +57,14 @@ class userClothes(models.Model):
 	def save(self, *args, **kwargs):
 		super(userClothes, self).save(*args, **kwargs)
 		img = Image.open(self.image.path)
-		img.save(self.image.path)
-
-		#if img.height > 1000 or img.width > 1000:
-			#output_size = (1000, 1000)
-			#img.thumbnail(output_size)
-			#img.save(self.image.path)
+		if img.height > 300 or img.width > 300:
+			output_size = (300, 300)
+			img.thumbnail(output_size)
+			img.save(self.image.path)
 
 	def get_absolute_url(self):
 		return 'http://127.0.0.1:8000/upload/'
+<<<<<<< Updated upstream
 =======
 # Create your models here.
 class clothingCategories(models.Model):
@@ -92,3 +91,11 @@ class userClothes(models.Model):
 	def __str__(self):
 		return self.name
 >>>>>>> main
+=======
+
+# Models for closets
+class Closet(models.Model):
+	name = models.CharField(max_length=25, default='')
+	closetClothes = []
+	closetUser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+>>>>>>> Stashed changes

@@ -1,0 +1,13 @@
+{% extends "blog/base.html" %}
+{% block content %}
+<h1>{{ user }}'s Closet!</h1>
+<ul>
+	{% for item in userClothes %}
+		<li><img src=" {{ item.image.url }}"></li>
+	{% empty %}
+		<big style="font-size:40px; font-weight:bold; color:orange;">
+        Your Closet Is Empty!
+    </big>
+	{% endfor %}
+</ul>
+{% endblock %}

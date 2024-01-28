@@ -96,6 +96,7 @@ def list(request):
 =======
     return render(request, 'main/list.html', {'title': 'list'})
 
+<<<<<<< Updated upstream
 def upload(response):
 	if response.method == "POST":
 		form = Upload(response.POST)
@@ -116,3 +117,15 @@ def upload(response):
 		form = Upload()
 	return render(response, "main/upload.html", {"form":form})
 >>>>>>> main
+=======
+def closet(request):
+    username = None
+    if request.user.is_authenticated:
+        username = request.user.username
+    context = {
+        'user' : username,
+        'userClothes' : userClothes.objects.filter(bloguser=request.user)
+    }
+
+    return render(request, 'blog/user_closet.html', context)
+>>>>>>> Stashed changes

@@ -11,6 +11,7 @@ class Upload(forms.Form):
 	color = forms.ChoiceField(choices=colorChoices)
 	
 
+<<<<<<< Updated upstream
 =======
 from django import forms
 
@@ -35,3 +36,5 @@ class Upload(forms.Form):
 	
 
 >>>>>>> main
+=======
+>>>>>>> Stashed changes

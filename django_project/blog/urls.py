@@ -16,6 +16,7 @@ urlpatterns = [
     path('upload/', views.upload, name='upload'),
 >>>>>>> main
     path('list/', views.list, name='list'),
+    path('closet/', views.closet, name='user-closet')
 ]
 
 # <app>/<model>_<viewtype>.html
