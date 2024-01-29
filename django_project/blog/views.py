@@ -93,8 +93,13 @@ def about(request):
 def list(request):
     return render(request, 'main/list.html', {'title': 'list'})
 
-def your_closet(request):
-    return render(request, 'user/your_closet.html', {'title': 'Your CozyCloset'})
-    
-def add_closet(request):
-    return render(request, 'user/add_closet.html', {'title': 'add closet'})
+def closet(request):
+    username = None
+    if request.user.is_authenticated:
+        username = request.user.username
+    context = {
+        'user' : username,
+        'userClothes' : userClothes.objects.filter(bloguser=request.user)
+    }
+
+    return render(request, 'blog/user_closet.html', context)
