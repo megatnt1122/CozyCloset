@@ -1,0 +1,18 @@
+TO RUN LOCALLY:
+1st: 
+         Navigate to django_project\django_project\settings.py, then edit the allowed hosts to be:
+ALLOWED_HOSTS = ['127.0.0.1']
+
+2nd: 
+         open CMD and navigate to the folder that contains manage.py
+
+3rd: Type:
+         python manage.py runserver
+
+IF YOU GET ANY ERRORS REGARDING LACKING MODULES -> search for that module on https://pypi.org/ and use pip install to install them... 
+I will make a requirments txt in order to store all the module names for you to install. 
+
+
+After step 3, copy url from
+Starting development server at http://127.0.0.1:8000/
+onto a web browser

@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 from django.views.generic import (
     ListView,
     DetailView,
@@ -91,41 +92,35 @@ def about(request):
     return render(request, 'blog/about.html', {'title': 'About'})
 
 def list(request):
-<<<<<<< HEAD
-    return render(request, 'main/list.html', {'title': 'list'})
-=======
     return render(request, 'main/list.html', {'title': 'list'})
 
-<<<<<<< Updated upstream
-def upload(response):
-	if response.method == "POST":
-		form = Upload(response.POST)
-
-		categories = {1: 'Shirt', 2: 'Pants', 3: 'Dress', 4: 'Shoes'}
-		styles = {1: 'Athletic', 2: 'Casual', 3: 'Formal', 4: 'Lounge'}
-
-
-		if form.is_valid():
-			name = form.cleaned_data["name"]
-			c = clothingCategories.objects.get(categoryID=(form.cleaned_data["category"]))
-			s = clothingStyles.objects.get(styleID=(form.cleaned_data["style"]))
-			newUpload = userClothes(categoryID=c, styleID=s, name=name)
-			newUpload.save()
-			return HttpResponseRedirect("/home")
-
-	else:
-		form = Upload()
-	return render(response, "main/upload.html", {"form":form})
->>>>>>> main
-=======
+@login_required
 def closet(request):
     username = None
     if request.user.is_authenticated:
         username = request.user.username
-    context = {
-        'user' : username,
-        'userClothes' : userClothes.objects.filter(bloguser=request.user)
-    }
+        context = {
+            'user': request.user,
+            'username': username,
+            'userClothes': userClothes.objects.filter(bloguser=request.user),
+            'title': 'Closet'
+        }
 
-    return render(request, 'blog/user_closet.html', context)
->>>>>>> Stashed changes
+        return render(request, 'blog/user_closet.html', context)
+
+@login_required
+def deleteItem(request, itemname=None):
+    item = get_object_or_404(userClothes, name=itemname)
+    item.delete()
+
+    username = None
+    if request.user.is_authenticated:
+        username = request.user.username
+        context = {
+            'user': request.user,
+            'username': username,
+            'userClothes': userClothes.objects.filter(bloguser=request.user),
+            'title': 'Closet'
+        }
+
+    return render(request, "blog/user_closet.html", context) 
