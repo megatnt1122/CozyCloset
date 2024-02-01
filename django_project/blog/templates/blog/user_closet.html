@@ -3,18 +3,25 @@
 <h1>{{ username }}'s Closet!</h1>
 <ul>
 	{% for item in userClothes %}
-		<big style="font-size:40px; font-weight:bold; color:orange;">
-		{{ item.name }}
-		{{ item.category }}
-		{{ item.style }}
-		{{ item.color }}
+		<div class="container2">
+		<div class="image">
+			<img src=" {{ item.image.url }}">
+		</div>
+			<div class="text">
+				<big style="font-size:40px; font-weight:bold; color:#ce796b;">
+					{{ item.name }}
+				</big><br>
+		<pre class="tab">Category:	{{ item.category }}</pre>
+		<pre class="tab4">Style:	{{ item.style }}</pre>
+		<pre class="tab4">Color:	{{ item.color }}</pre>
+			</div>
 		<br>
-		<img src=" {{ item.image.url }}">
 		<a style="float:center; margin:20px; color: red;" href="/closet/{{item.name}}/delete/" class="btn btn-outline-info" >Delete</a>
 		<br>
-		</big>
+		</div>
+		<hr>
 	{% empty %}
-		<big style="font-size:40px; font-weight:bold; color:orange;">
+		<big style="font-size:40px; font-weight:bold; color:#ce796b;">
         Your Closet Is Empty!
     </big>
 	{% endfor %}

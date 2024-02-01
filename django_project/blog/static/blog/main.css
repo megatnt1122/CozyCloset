@@ -82,3 +82,24 @@ a.article-title:hover {
 .account-heading {
   font-size: 2.5rem;
 }
+
+
+
+.container2 {
+ display: grid;
+ align-items: center;
+ grid-template-columns: 1fr 1fr 1fr;
+ column-gap: 4px;
+}
+
+.text {
+  padding-left: 20px;
+  font-size: 24px;
+}
+
+.tab {
+  tab-size: 2;
+}
+.tab4 {
+  tab-size: 5;
+}

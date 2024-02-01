@@ -29,7 +29,7 @@ class clothingCategories(models.Model):
 
 class clothingStyles(models.Model):
 	style = models.CharField(max_length=50)
-	
+
 
 	def __str__(self):
 		return self.style
@@ -62,7 +62,7 @@ class userClothes(models.Model):
 			img.save(self.image.path)
 
 	def get_absolute_url(self):
-		return 'http://127.0.0.1:8000/upload/'
+		return '/upload/'
 
 # Models for closets
 class Closet(models.Model):
