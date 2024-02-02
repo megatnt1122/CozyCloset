@@ -13,7 +13,7 @@ urlpatterns = [
     path('upload/', UploadView.as_view(), name='upload'),
     path('list/', views.list, name='list'),
     path('closet/', views.closet, name='user-closet'),
-    path('closet/<str:itemname>/delete/', views.deleteItem, name="delete-item")
+    path('closet/<str:itemid>/delete/', views.deleteItem, name="delete-item")
 ]
 
 # <app>/<model>_<viewtype>.html
