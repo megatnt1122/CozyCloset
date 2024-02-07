@@ -29,7 +29,7 @@ class clothingCategories(models.Model):
 
 class clothingStyles(models.Model):
 	style = models.CharField(max_length=50)
-	
+
 
 	def __str__(self):
 		return self.style
@@ -54,6 +54,7 @@ class userClothes(models.Model):
 		return self.name
 
 	def save(self, *args, **kwargs):
+		self.name = self.name.title()
 		super(userClothes, self).save(*args, **kwargs)
 		img = Image.open(self.image.path)
 		if img.height > 300 or img.width > 300:
@@ -62,7 +63,7 @@ class userClothes(models.Model):
 			img.save(self.image.path)
 
 	def get_absolute_url(self):
-		return 'http://127.0.0.1:8000/upload/'
+		return reverse('upload')
 
 # Models for closets
 class Closet(models.Model):

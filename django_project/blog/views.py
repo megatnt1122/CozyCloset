@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 from django.views.generic import (
     ListView,
     DetailView,
@@ -93,13 +94,33 @@ def about(request):
 def list(request):
     return render(request, 'main/list.html', {'title': 'list'})
 
+@login_required
 def closet(request):
     username = None
     if request.user.is_authenticated:
         username = request.user.username
-    context = {
-        'user' : username,
-        'userClothes' : userClothes.objects.filter(bloguser=request.user)
-    }
+        context = {
+            'user': request.user,
+            'username': username,
+            'userClothes': userClothes.objects.filter(bloguser=request.user),
+            'title': 'Closet'
+        }
 
-    return render(request, 'blog/user_closet.html', context)
+        return render(request, 'blog/user_closet.html', context)
+
+@login_required
+def deleteItem(request, itemid):
+    item = get_object_or_404(userClothes, id=itemid)
+    item.delete()
+
+    username = None
+    if request.user.is_authenticated:
+        username = request.user.username
+        context = {
+            'user': request.user,
+            'username': username,
+            'userClothes': userClothes.objects.filter(bloguser=request.user),
+            'title': 'Closet'
+        }
+
+    return render(request, "blog/user_closet.html", context) 
