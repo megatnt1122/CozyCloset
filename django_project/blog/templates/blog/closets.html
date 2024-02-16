@@ -1,0 +1,72 @@
+{% extends "blog/base.html" %}
+{% block content %}
+<style>
+h1{
+	text-align: center;
+	margin-bottom: 25;
+}
+
+.container{
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-evenly;
+	padding: 0;
+	margin-top: 0;
+	list-style: none;
+}
+
+.images{
+	float: left;
+	margin: 10;
+}
+
+.button-wrapper{
+	text-align:center;
+	display:inline-block;
+	margin:10px;
+	margin-left: -30;
+	margin-right: 50;
+}
+
+.delete{
+	background: none;
+	border: 2px solid #f44336;
+	color: black;
+	padding: 5px 15px;
+	text-align: center;
+	text-decoration: none;
+  	display: inline-block;
+  	font-size: 16px;
+  	margin: 4px 2px;
+  	transition-duration: 0.4s;
+  	cursor: pointer;
+}
+
+.delete:hover{
+	background-color: #f44336;
+	color: white;
+}
+</style>
+
+
+<h1>{{ username }}'s Closets</h1>
+
+<div class="container">
+	{% for closet in closets %}	
+		<li class="images">
+			<a href="/closets/{{closet.id}}/">
+			<img src="/media/closet.png" width="200" height="200">
+			</a>
+			<div class="button-wrapper">
+				<h3 class="closetnames">{{ closet.name }}</h3>
+				<a href="/closets/{{closet.id}}/delete/">
+					<button class="delete">Delete</button>
+				</a>
+			</div>
+		</li>
+	{% endfor %}
+	<a href="/createcloset/">
+		<img src="/media/plus.png" width="200" height="200">
+	</a>
+</div>
+{% endblock %}

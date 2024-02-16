@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
@@ -12,7 +12,7 @@ from django.views.generic import (
 )
 from .models import Post
 from .forms import Upload
-from .models import clothingStyles, clothingCategories, userClothes
+from .models import clothingStyles, clothingCategories, userClothes, Closet
 
 
 def home(request):
@@ -79,12 +79,30 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
             return True
         return False
 
+# the view for the upload page
 class UploadView(LoginRequiredMixin, CreateView):
     model = userClothes
-    fields = ['name','category','style','color','image']
+    fields = ['name','category','style','color','closet','image']
 
+    # only shows the users' closets in the closet drop down when uploading a new item
+    def get_form(self, *args, **kwargs):
+        form = super(UploadView, self).get_form(*args, **kwargs)
+        form.fields['closet'].queryset = Closet.objects.filter(closetUser=self.request.user)
+        return form
+
+    # links the current user to the item being uploaded
     def form_valid(self, form):
         form.instance.bloguser = self.request.user
+        return super().form_valid(form)
+
+# the view for creating a new closet
+class ClosetCreateView(LoginRequiredMixin, CreateView):
+    model = Closet
+    fields = ['name']
+
+    # links the current user to the closet being created
+    def form_valid(self, form):
+        form.instance.closetUser = self.request.user
         return super().form_valid(form)
 
 
@@ -95,32 +113,72 @@ def list(request):
     return render(request, 'main/list.html', {'title': 'list'})
 
 @login_required
-def closet(request):
+def usersClosets(request):
     username = None
     if request.user.is_authenticated:
         username = request.user.username
         context = {
             'user': request.user,
             'username': username,
-            'userClothes': userClothes.objects.filter(bloguser=request.user),
-            'title': 'Closet'
+            'closets': Closet.objects.filter(closetUser=request.user),
+            'title': 'Closets'
         }
 
-        return render(request, 'blog/user_closet.html', context)
+        return render(request, 'blog/closets.html', context)
 
 @login_required
-def deleteItem(request, itemname=None):
-    item = get_object_or_404(userClothes, name=itemname)
-    item.delete()
+def openCloset(request, closetid=None):
+    username = None
+    closet = get_object_or_404(Closet, id=closetid)
+    if request.user.is_authenticated:
+        username = request.user.username
+        if len(userClothes.objects.filter(closet=closetid)) == 0:
+            empty = True
+        else:
+            empty = False
+        context = {
+            'closet': closet,
+            'username': username,
+            'closetClothes': userClothes.objects.filter(closet=closetid),
+            'title': closet.name,
+            'empty': empty
+        }
 
+        return render(request, 'blog/open_closet.html', context)
+
+@login_required
+def Clothes(request):
     username = None
     if request.user.is_authenticated:
         username = request.user.username
+        if len(userClothes.objects.filter(bloguser=request.user)) == 0:
+            empty = True
+        else:
+            empty = False
         context = {
             'user': request.user,
             'username': username,
             'userClothes': userClothes.objects.filter(bloguser=request.user),
-            'title': 'Closet'
+            'title': 'All Clothes',
+            'empty': empty
         }
 
-    return render(request, "blog/user_closet.html", context) 
+        return render(request, 'blog/user_clothes.html', context)
+
+@login_required
+def deleteItem(request, itemid=None, closetid=None):
+    # get the item from the database and delete it
+    item = get_object_or_404(userClothes, id=itemid)
+    item.delete()
+
+    if closetid == None: 
+        #return render(request, "blog/user_clothes.html", context)
+        return redirect(reverse('user-clothes'))
+    else:
+        return redirect(reverse('open-closet', kwargs={'closetid': closetid}))
+
+@login_required
+def deleteCloset(request, closetid=None):
+    closet = get_object_or_404(Closet, id=closetid)
+    closet.delete()
+    return redirect(reverse('user-closets'))
