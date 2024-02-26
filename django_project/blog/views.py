@@ -11,8 +11,8 @@ from django.views.generic import (
     DeleteView
 )
 from .models import Post
-from .forms import Upload
-from .models import clothingStyles, clothingCategories, userClothes, Closet
+from .forms import Upload, AddToCloset
+from .models import clothingStyles, clothingCategories, userClothes, Closet, closetClothes
 
 
 def home(request):
@@ -82,13 +82,13 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 # the view for the upload page
 class UploadView(LoginRequiredMixin, CreateView):
     model = userClothes
-    fields = ['name','category','style','color','closet','image']
+    fields = ['name','category','style','color','image']
 
     # only shows the users' closets in the closet drop down when uploading a new item
-    def get_form(self, *args, **kwargs):
-        form = super(UploadView, self).get_form(*args, **kwargs)
-        form.fields['closet'].queryset = Closet.objects.filter(closetUser=self.request.user)
-        return form
+    #def get_form(self, *args, **kwargs):
+    #    form = super(UploadView, self).get_form(*args, **kwargs)
+    #    form.fields['closet'].queryset = Closet.objects.filter(closetUser=self.request.user)
+    #    return form
 
     # links the current user to the item being uploaded
     def form_valid(self, form):
@@ -132,14 +132,17 @@ def openCloset(request, closetid=None):
     closet = get_object_or_404(Closet, id=closetid)
     if request.user.is_authenticated:
         username = request.user.username
-        if len(userClothes.objects.filter(closet=closetid)) == 0:
+        if len(closetClothes.objects.filter(closet=closetid)) == 0:
             empty = True
         else:
             empty = False
+        clothes = []
+        for c in closetClothes.objects.filter(closet=closetid):
+            clothes.append(c.clothing_item)
         context = {
             'closet': closet,
             'username': username,
-            'closetClothes': userClothes.objects.filter(closet=closetid),
+            'closetClothes': clothes,
             'title': closet.name,
             'empty': empty
         }
@@ -166,15 +169,39 @@ def Clothes(request):
         return render(request, 'blog/user_clothes.html', context)
 
 @login_required
-def deleteItem(request, itemid=None, closetid=None):
-    # get the item from the database and delete it
-    item = get_object_or_404(userClothes, id=itemid)
-    item.delete()
+def AddToCloset(request, itemid=None):
+    item = userClothes.objects.get(id=itemid)
 
-    if closetid == None: 
+    if request.POST.get("save"):
+        for c in Closet.objects.filter(closetUser=request.user):
+            if request.POST.get(str(c.id)) == "clicked":
+                adding = closetClothes(closet=c, clothing_item=item, user=request.user)
+                adding.save()
+    Closets = Closet.objects.filter(closetUser=request.user)
+    closets = []
+    for c in Closets:
+        if len(closetClothes.objects.filter(closet=c, clothing_item=item, user=request.user)) == 0:
+            closets.append(c)
+    context = {
+        'user': request.user,
+        'closets': closets,
+    }
+
+    return render(request, 'blog/AddToCloset.html', context)
+
+@login_required
+def deleteItem(request, itemid=None, closetid=None):
+    # get item from database
+    item = get_object_or_404(userClothes, id=itemid)
+    if closetid == None:
+        # delete item
+        item.delete() 
         #return render(request, "blog/user_clothes.html", context)
         return redirect(reverse('user-clothes'))
     else:
+        closet = get_object_or_404(Closet, id=closetid)
+        closetitem = get_object_or_404(closetClothes, closet=closet, clothing_item=item)
+        closetitem.delete()
         return redirect(reverse('open-closet', kwargs={'closetid': closetid}))
 
 @login_required

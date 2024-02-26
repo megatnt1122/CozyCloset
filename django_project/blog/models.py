@@ -16,23 +16,6 @@ class Post(models.Model):
     def get_absolute_url(self):
         return reverse('post-detail', kwargs={'pk': self.pk})
 
-# Models for closets
-class Closet(models.Model):
-	name = models.CharField(max_length=25, default='')
-	closetUser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
-
-	def __str__(self):
-		return self.name
-
-	def save(self, *args, **kwargs):
-		self.name = self.name.title()
-		super(Closet, self).save(*args, **kwargs)
-
-	def get_absolute_url(self):
-		return '/closets/'
-		
-
-
 # Models for uploading
 class clothingCategories(models.Model):
 	category = models.CharField(max_length=50)
@@ -60,7 +43,6 @@ class userClothes(models.Model):
 	style = models.ForeignKey(clothingStyles, on_delete=models.CASCADE, verbose_name='*Style')
 	color = models.ForeignKey(colors, on_delete=models.CASCADE, verbose_name='*Color')
 	image = models.ImageField(default='default.jpg', upload_to='clothing_photos')
-	closet = models.ForeignKey(Closet, on_delete=models.CASCADE, default='', blank=True, null=True)
 	bloguser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
 
 
@@ -78,3 +60,23 @@ class userClothes(models.Model):
 
 	def get_absolute_url(self):
 		return '/upload/'
+
+# Models for closets
+class Closet(models.Model):
+	name = models.CharField(max_length=25, default='')
+	closetUser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+
+	def __str__(self):
+		return self.name
+
+	def save(self, *args, **kwargs):
+		self.name = self.name.title()
+		super(Closet, self).save(*args, **kwargs)
+
+	def get_absolute_url(self):
+		return reverse('open-closet', kwargs={'closetid': self.id})
+
+class closetClothes(models.Model):
+	closet = models.ForeignKey(Closet, on_delete=models.CASCADE, default='')
+	clothing_item = models.ForeignKey(userClothes, on_delete=models.CASCADE, default='')
+	user = models.ForeignKey(User, on_delete=models.CASCADE, default=-1)

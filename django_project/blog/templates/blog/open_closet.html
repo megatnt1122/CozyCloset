@@ -6,6 +6,11 @@ h1{
 	margin-bottom: 25;
 }
 
+p{
+	text-align: center;
+	margin-bottom: 25;
+}
+
 .button{
 	width: 300;
 	float: left;
@@ -21,19 +26,20 @@ h1{
   	cursor: pointer;
 }
 
-.delete{
+.remove{
 	color: black; 
 	border: 2px solid #f44336;
 }
 
-.delete:hover{
+.remove:hover{
 	background-color: #f44336;
 	color: white;
 }
 </style>
 
 {% if empty %}
-	<h1>This Closet Is Empty!</h1>
+	<h1>{{ username }}'s Closet: {{ title }}</h1>
+	<p>(This Closet Is Empty!)</p>
 {% else %}
 	<h1>{{ username }}'s Closet: {{ title }}</h1>
 {% endif %}
@@ -54,7 +60,7 @@ h1{
 			</div>
 		<br>
 		<a href="/delete/{{item.id}}/{{closet.id}}/">
-			<button class="button delete">Delete</button>
+			<button class="button remove">Remove</button>
 		</a>
 		<br>
 		</div>
