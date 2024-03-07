@@ -13,4 +13,41 @@
 			</div>
 		</form>
 	</div>
+	
+	<h1>{{ user.username }}'s Clothes</h1>
+	<h1>{{ Post.author}} Items</h1>
+	<h1>{{ url}} Items</h1>
+	
+	{% for item in user.userClothes %}
+	<img src=" {{ item.image.url }}">
+	{% endfor %}
+	
+	{% for item in Closet.userClothes %}
+	<img src=" {{ item.image.url }}">
+	{% endfor %}
+	
+	 <img src="{{ post.image.url }}">
+	 <img class="image" src="{{ post.image.url }}">
+	 
+	 {% for item in userClothes %}
+		<div class="container2">
+		<div class="image">
+			<img src=" {{ item.image.url }}">
+		</div>
+			<div class="text">
+				<big style="font-size:40px; font-weight:bold; color:#ce796b;">
+					{{ item.name }}
+				</big><br>
+		<pre class="tab">category:	{{ item.category }}</pre>
+		<pre class="tab4">style:	{{ item.style }}</pre>
+		<pre class="tab4">color:	{{ item.color }}</pre>
+			</div>
+		<br>
+		<a href="/sharepost/{{item.id}}/">
+			<button class="button share">Share</button>
+		</a>
+		<br>
+		</div>
+		<hr>
+	{% endfor %}
 {% endblock content %}

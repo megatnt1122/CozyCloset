@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UploadView, PostListView, PostDetailView, PostCreateView, PostUpdateView, PostDeleteView, UserPostListView, deleteItem
+from .views import UploadView, ClosetCreateView, PostListView, PostDetailView, PostCreateView, PostUpdateView, PostDeleteView, UserPostListView, deleteItem, usersClosets, openCloset, deleteCloset, AddToCloset
 from . import views
 
 urlpatterns = [
@@ -12,8 +12,15 @@ urlpatterns = [
     path('about/', views.about, name='blog-about'),
     path('upload/', UploadView.as_view(), name='upload'),
     path('list/', views.list, name='list'),
-    path('closet/', views.closet, name='user-closet'),
-    path('closet/<str:itemid>/delete/', views.deleteItem, name="delete-item")
+    path('clothes/', views.Clothes, name='user-clothes'),
+    path('clothes/<str:itemid>/addtocloset/', views.AddToCloset, name='addto-closet'),
+    path('createcloset/', ClosetCreateView.as_view(), name='create-create'),
+    path('closets/', views.usersClosets, name="user-closets"),
+    path('closets/<str:closetid>/', views.openCloset, name="open-closet"),
+    path('closets/<str:closetid>/delete/', views.deleteCloset, name="delete-closet"),
+    path('delete/<str:itemid>/', views.deleteItem, name="delete-item"),
+    path('delete/<str:itemid>/<str:closetid>/', views.deleteItem, name="delete-citem"),
+    path('sharepost/<int:pk>/', PostCreateView.as_view(), name='post-create'),
 ]
 
 # <app>/<model>_<viewtype>.html

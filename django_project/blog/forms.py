@@ -10,3 +10,6 @@ class Upload(forms.Form):
 	color = forms.ChoiceField(choices=colorChoices)
 	
 
+class AddToCloset(forms.Form):
+	check = forms.BooleanField()
+

@@ -1,0 +1,80 @@
+{% extends "blog/base.html" %}
+{% block content %}
+<style>
+h1{
+	text-align: center;
+	margin-bottom: 25;
+}
+
+.button{
+	width: 300;
+	float: left;
+	background: none;
+	padding: 5px 15px;
+	text-align: center;
+	text-decoration: none;
+  	display: inline-block;
+  	font-size: 16px;
+  	margin: 10px;
+  	margin-left: 0px;
+  	transition-duration: 0.4s;
+  	cursor: pointer;
+}
+
+.delete{
+	color: black; 
+	border: 2px solid #f44336;
+}
+
+.delete:hover{
+	background-color: #f44336;
+	color: white;
+}
+
+.add{
+	color: black; 
+	border: 2px solid #008CBA;
+}
+
+.add:hover{
+	background-color: #008CBA;
+	color: white;
+}
+</style>
+
+{% if empty %}
+	<h1>{{ username }} Hasn't Uploaded Any Clothes Yet</h1>
+{% else %}
+	<h1>{{ username }}'s Clothes</h1>
+{% endif %}
+
+<ul>
+	{% for item in userClothes %}
+		<div class="container2">
+		<div class="image">
+			<img src=" {{ item.image.url }}">
+		</div>
+			<div class="text">
+				<big style="font-size:40px; font-weight:bold; color:#ce796b;">
+					{{ item.name }}
+				</big><br>
+		<pre class="tab">category:	{{ item.category }}</pre>
+		<pre class="tab4">style:	{{ item.style }}</pre>
+		<pre class="tab4">color:	{{ item.color }}</pre>
+			</div>
+		<br>
+		<a href="/delete/{{item.id}}/">
+			<button class="button delete">Delete</button>
+		</a>
+		<a href="/clothes/{{item.id}}/addtocloset/">
+			<button class="button add">Add To Closet</button>
+		</a>
+		<a href="/sharepost/{{item.id}}/">
+			<button class="button share">Share</button>
+		</a>
+		<br>
+		</div>
+		<hr>
+	{% endfor %}
+</ul>
+{% endblock %}

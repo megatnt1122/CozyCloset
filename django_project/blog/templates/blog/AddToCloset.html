@@ -1,0 +1,22 @@
+{% extends "blog/base.html" %}
+{% block title %}Add To Closet{% endblock %}
+
+{% block content %}
+<style>
+	li{
+		align-content: left;
+		font-size: 30px;
+	}
+</style>
+
+<h1>Add Item To Your Closets:</h1>
+<form method="post" action="#">
+	{% csrf_token %}
+	{% for closet in closets %}
+	<ul>
+		<li><input type="checkbox", value="clicked", name="{{closet.id}}">{{closet.name}}</li>
+	</ul>
+	{% endfor %}
+	<button type="submit", name="save", value="save">Save</button>
+</form>
+{% endblock %}
