@@ -52,6 +52,8 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     user = Post.author
 
     #Get info from another model
+    #help from here
+    #https://www.geeksforgeeks.org/how-to-pass-additional-context-into-a-class-based-view-django/
     #extra_context ={'userClothes': userClothes.objects.all()}
     def get_context_data (self, *args, **kwargs):
         extra_context = super(PostCreateView, self).get_context_data(*args,**kwargs)
