@@ -13,6 +13,7 @@ from django.views.generic import (
 from .models import Post
 from .forms import Upload, AddToCloset
 from .models import clothingStyles, clothingCategories, userClothes, Closet, closetClothes
+from django.db.models import Q
 
 
 def home(request):
@@ -48,9 +49,15 @@ class PostDetailView(DetailView):
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     fields = ['title', 'content', 'image']
-    
+    user = Post.author
+
     #Get info from another model
-    extra_context ={'userClothes': Closet.objects.all()}
+    #extra_context ={'userClothes': userClothes.objects.all()}
+    def get_context_data (self, *args, **kwargs):
+        extra_context = super(PostCreateView, self).get_context_data(*args,**kwargs)
+        extra_context['userClothes'] = userClothes.objects.filter(bloguser=self.request.user)
+        return extra_context
+
     #item = userClothes.objects.get(id=itemid)
     #item = userClothes.objects.get(id=pk)
 
@@ -200,7 +207,7 @@ def deleteItem(request, itemid=None, closetid=None):
     item = get_object_or_404(userClothes, id=itemid)
     if closetid == None:
         # delete item
-        item.delete() 
+        item.delete()
         #return render(request, "blog/user_clothes.html", context)
         return redirect(reverse('user-clothes'))
     else:
