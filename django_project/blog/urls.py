@@ -20,7 +20,7 @@ urlpatterns = [
     path('closets/<str:closetid>/delete/', views.deleteCloset, name="delete-closet"),
     path('delete/<str:itemid>/', views.deleteItem, name="delete-item"),
     path('delete/<str:itemid>/<str:closetid>/', views.deleteItem, name="delete-citem"),
-    path('sharepost/<int:pk>/', PostCreateView.as_view(), name='post-create'),
+    path('sharepost/<int:pk>/<str:itemid>/', PostCreateView.as_view(), name='post-create'),
 ]
 
 # <app>/<model>_<viewtype>.html
