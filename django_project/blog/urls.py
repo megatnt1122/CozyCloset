@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UploadView, ClosetCreateView, PostListView, PostDetailView, PostCreateView, PostUpdateView, PostDeleteView, UserPostListView, deleteItem, usersClosets, openCloset, deleteCloset, AddToCloset
+from .views import UploadView, ClosetCreateView, PostListView, PostDetailView, PostCreateView, PostUpdateView, PostDeleteView, UserPostListView, deleteItem, usersClosets, openCloset, deleteCloset, AddToCloset, AddToPost
 from . import views
 
 urlpatterns = [
@@ -20,7 +20,8 @@ urlpatterns = [
     path('closets/<str:closetid>/delete/', views.deleteCloset, name="delete-closet"),
     path('delete/<str:itemid>/', views.deleteItem, name="delete-item"),
     path('delete/<str:itemid>/<str:closetid>/', views.deleteItem, name="delete-citem"),
-    path('sharepost/<int:pk>/<str:itemid>/', PostCreateView.as_view(), name='post-create'),
+    path('clothes/<str:itemid>/addtopost/', views.AddToPost, name='addto-post'),
+    #####'clothes/<str:itemid>/addtopost/'
 ]
 
 # <app>/<model>_<viewtype>.html

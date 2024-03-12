@@ -95,6 +95,6 @@ class closetClothes(models.Model):
 	clothing_item = models.ForeignKey(userClothes, on_delete=models.CASCADE, default='')
 	user = models.ForeignKey(User, on_delete=models.CASCADE, default=-1)
     
-#class postClothes(models.Model):
-	#clothing_item = models.ForeignKey(userClothes, on_delete=models.CASCADE, default='')
-	#user = models.ForeignKey(User, on_delete=models.CASCADE, default=-1)
+class postClothes(models.Model):
+	clothing_item = models.ForeignKey(userClothes, on_delete=models.CASCADE, default='')
+	user = models.ForeignKey(User, on_delete=models.CASCADE, default=-1)

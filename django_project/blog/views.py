@@ -52,7 +52,6 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     user = Post.author
 
     #Get info from another model
-<<<<<<< HEAD
     #Help from https://www.geeksforgeeks.org/how-to-pass-additional-context-into-a-class-based-view-django/
     #Way number 1
     #extra_context ={'userClothes': userClothes.objects.filter(bloguser=self.request.user)}
@@ -69,7 +68,6 @@ class PostCreateView(LoginRequiredMixin, CreateView):
                 adding = (title, content, date_posted, author, image=c  )
                 adding.save() '''    
         
-=======
     #help from here
     #https://www.geeksforgeeks.org/how-to-pass-additional-context-into-a-class-based-view-django/
     #extra_context ={'userClothes': userClothes.objects.all()}
@@ -81,7 +79,6 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     #item = userClothes.objects.get(id=itemid)
     #item = userClothes.objects.get(id=pk)
 
->>>>>>> d1acc0413c322d94d5cb7fef60fecb109540fd33
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
@@ -222,26 +219,24 @@ def AddToCloset(request, itemid=None):
 
     return render(request, 'blog/AddToCloset.html', context)
     
-'''@login_required
-def AddToCloset(request, itemid=None):
+@login_required
+def AddToPost(request, itemid=None):
     item = userClothes.objects.get(id=itemid)
 
     if request.POST.get("save"):
         for c in Closet.objects.filter(closetUser=request.user):
             if request.POST.get(str(c.id)) == "clicked":
-                adding = closetClothes(closet=c, clothing_item=item, user=request.user)
+                adding = closetClothes(closet=c, clothing_item=item, user=request.user) #Adding to Post
                 adding.save()
+    
     Closets = Closet.objects.filter(closetUser=request.user)
     closets = []
-    for c in Closets:
-        if len(closetClothes.objects.filter(closet=c, clothing_item=item, user=request.user)) == 0:
-            closets.append(c)
     context = {
         'user': request.user,
-        'closets': closets,
+        'closets': closets, #Make need to change
     }
 
-    return render(request, 'blog/AddToCloset.html', context) '''
+    return render(request, 'blog/AddToPost.html', context)
 
 @login_required
 def deleteItem(request, itemid=None, closetid=None):
