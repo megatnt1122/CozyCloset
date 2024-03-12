@@ -10,9 +10,11 @@ class Post(models.Model):
     date_posted = models.DateTimeField(default=timezone.now)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     
-    image = models.ImageField(default='default.jpg', upload_to='clothing_photos')
+    image = models.ImageField(default='', upload_to='post_photos')
+    
+    #image = models.ImageField(default='default.jpg', upload_to='clothing_photos')
     #Need to change to default.jpg to see differents
-    def save(self, *args, **kwargs):
+    '''def save(self, *args, **kwargs):
         super(Post, self).save(*args, **kwargs)
 
         img = Image.open(self.image.path)
@@ -22,7 +24,7 @@ class Post(models.Model):
             output_size = (300, 300)
             img.thumbnail(output_size)
             img.save(self.image.path)
-        print(img)
+        print(img)'''
 
     def __str__(self):
         return self.title

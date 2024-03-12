@@ -11,7 +11,7 @@ from django.views.generic import (
     DeleteView
 )
 from .models import Post
-from .forms import Upload, AddToCloset
+from .forms import Upload, AddToCloset, AddToPost
 from .models import clothingStyles, clothingCategories, userClothes, Closet, closetClothes
 from django.db.models import Q
 
@@ -48,7 +48,7 @@ class PostDetailView(DetailView):
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
-    fields = ['title', 'content', 'image']
+    fields = ['title', 'content'] #Might need to put back 'image' later
     user = Post.author
 
     #Get info from another model
@@ -86,7 +86,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
-    fields = ['title', 'content', 'image']
+    fields = ['title', 'content'] #Add back 'image' and try catch no image later in ntml
 
     def form_valid(self, form):
         form.instance.author = self.request.user
