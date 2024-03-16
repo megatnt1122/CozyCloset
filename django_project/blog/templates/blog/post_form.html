@@ -13,4 +13,28 @@
 			</div>
 		</form>
 	</div>
+	<form method="post" action="#">
+		{% csrf_token %}
+		{% for item in userClothes %}
+			<div class="container2">
+			<div class="image">
+				<img src=" {{ item.image.url }}">
+			</div>
+				<div class="text">
+					<big style="font-size:40px; font-weight:bold; color:#ce796b;">
+						{{ item.name }}
+					</big><br>
+			<pre class="tab">category:	{{ item.category }}</pre>
+			<pre class="tab4">style:	{{ item.style }}</pre>
+			<pre class="tab4">color:	{{ item.color }}</pre>
+				</div>
+			<br>
+			<ul>
+				<li><input type="checkbox", value="clicked", name="{{item.id}}"> {{item.name}}</li>
+			</ul>
+			<button type="submit", name="save", value="save">Add to Post</button>
+			<br>
+			</div>
+			<hr>
+		{% endfor %}
 {% endblock content %}
