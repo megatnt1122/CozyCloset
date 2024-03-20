@@ -109,8 +109,8 @@ def closet(request):
         return render(request, 'blog/user_closet.html', context)
 
 @login_required
-def deleteItem(request, itemname=None):
-    item = get_object_or_404(userClothes, name=itemname)
+def deleteItem(request, itemid):
+    item = get_object_or_404(userClothes, id=itemid)
     item.delete()
 
     username = None
