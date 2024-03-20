@@ -1,6 +1,10 @@
 {% extends "blog/base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
+	shareditem
+	{{shareditem}}
+	<img src=" {{ shareditem.image.url }}">
+	<img src=" {{ shareditem.url }}">
 	<div class="content-selection">
 		<form method="POST">
 			{% csrf_token %}
@@ -13,11 +17,13 @@
 			</div>
 		</form>
 	</div>
-	<form method="post" action="#">
+	<form method="post" action="#" enctype="multipart/form-data">
 		{% csrf_token %}
 		{% for item in userClothes %}
 			<div class="container2">
 			<div class="image">
+				item.image
+				{{item.image}}
 				<img src=" {{ item.image.url }}">
 			</div>
 				<div class="text">
@@ -37,4 +43,5 @@
 			</div>
 			<hr>
 		{% endfor %}
+		
 {% endblock content %}

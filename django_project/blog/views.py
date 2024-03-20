@@ -45,12 +45,11 @@ class UserPostListView(ListView):
 class PostDetailView(DetailView):
     model = Post
 
-
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     fields = ['title', 'content']
     user = Post.author
-
+    
     #Get info from another model
     #Help from https://www.geeksforgeeks.org/how-to-pass-additional-context-into-a-class-based-view-django/
     #Way number 1
@@ -60,8 +59,19 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self,*args, **kwargs):
         extra_context = super(PostCreateView, self).get_context_data(*args,**kwargs)
         extra_context['userClothes'] = userClothes.objects.filter(bloguser=self.request.user)
+        try:
+            shareditem = get_object_or_404(userClothes, id=self.kwargs.get('itemid')) # This didn't break
+            print(shareditem)
+            extra_context['shareditem'] = shareditem
+            print("Old status: {}".format(extra_context))
+            adding = Post(title=Post.title, content=Post.content, date_posted=Post.date_posted, author=request.user, image='default.jpg')
+            adding.save()
+            print()
+            print("NEW status: {}".format(adding))
+        except:
+            pass
         return extra_context
-        
+    
     '''if request.POST.get("save"):
         for c in userClothes.objects.filter(bloguser=self.request.user):
             if request.POST.get(str(c.id)) == "clicked":
@@ -71,6 +81,11 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
+        
+    #def get_item(self):
+        #shareitemid = get_object_or_404(User, itemid=self.kwargs.get('itemid'))
+        #print(shareitemid)
+        #return print(shareitemid)
 
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):

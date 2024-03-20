@@ -22,7 +22,7 @@ urlpatterns = [
     path('delete/<str:itemid>/<str:closetid>/', views.deleteItem, name="delete-citem"),
     path('clothes/', views.Clothes, name='my-clothes'),
     path('clothes/<str:itemid>/addtocloset/', views.AddToCloset, name='addto-closet'),
-    path('clothes/<str:itemid>/addtopost/', views.AddToPost, name='addto-post'),
+    path('clothes/<str:itemid>/addtopost/', PostCreateView.as_view(), name='addto-post'),
     #####'clothes/<str:itemid>/addtopost/'
 ]
 
