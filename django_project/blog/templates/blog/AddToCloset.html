@@ -10,11 +10,11 @@
 </style>
 
 <h1>Add Item To Your Closets:</h1>
-<form method="post" action="#">
+<form method="post" action="">
 	{% csrf_token %}
 	{% for closet in closets %}
 	<ul>
-		<li><input type="checkbox", value="clicked", name="{{closet.id}}">{{closet.name}}</li>
+		<li><input type="checkbox", value="clicked", name="{{closet.id}}">	{{closet.name}}</li>
 	</ul>
 	{% endfor %}
 	<button type="submit", name="save", value="save">Save</button>

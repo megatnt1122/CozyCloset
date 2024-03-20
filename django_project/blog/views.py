@@ -11,7 +11,7 @@ from django.views.generic import (
     DeleteView
 )
 from .models import Post
-from .forms import Upload, AddToCloset, AddToPost
+from .forms import Upload, AddToCloset
 from .models import clothingStyles, clothingCategories, userClothes, Closet, closetClothes
 from django.db.models import Q
 
@@ -48,7 +48,7 @@ class PostDetailView(DetailView):
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
-    fields = ['title', 'content'] #Might need to put back 'image' later
+    fields = ['title', 'content']
     user = Post.author
 
     #Get info from another model
@@ -66,19 +66,8 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         for c in userClothes.objects.filter(bloguser=self.request.user):
             if request.POST.get(str(c.id)) == "clicked":
                 adding = (title, content, date_posted, author, image=c  )
-                adding.save() '''    
-        
-    #help from here
-    #https://www.geeksforgeeks.org/how-to-pass-additional-context-into-a-class-based-view-django/
-    #extra_context ={'userClothes': userClothes.objects.all()}
-    def get_context_data (self, *args, **kwargs):
-        extra_context = super(PostCreateView, self).get_context_data(*args,**kwargs)
-        extra_context['userClothes'] = userClothes.objects.filter(bloguser=self.request.user)
-        return extra_context
-
-    #item = userClothes.objects.get(id=itemid)
-    #item = userClothes.objects.get(id=pk)
-
+                adding.save() '''
+    
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
@@ -86,7 +75,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
-    fields = ['title', 'content'] #Add back 'image' and try catch no image later in ntml
+    fields = ['title', 'content']
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -143,7 +132,7 @@ def list(request):
     return render(request, 'main/list.html', {'title': 'list'})
 
 @login_required
-def usersClosets(request):
+def myClosets(request):
     username = None
     if request.user.is_authenticated:
         username = request.user.username
@@ -154,10 +143,23 @@ def usersClosets(request):
             'title': 'Closets'
         }
 
-        return render(request, 'blog/closets.html', context)
+        return render(request, 'blog/my_closets.html', context)
 
 @login_required
-def openCloset(request, closetid=None):
+def userClosets(request, username=None):
+    if request.user.is_authenticated:
+        user = get_object_or_404(User, username=username)
+        context = {
+            'user': user,
+            'username': username,
+            'closets': Closet.objects.filter(closetUser=user),
+            'title': 'Closets'
+        }
+
+        return render(request, 'blog/user_closets.html', context)
+
+@login_required
+def openMyCloset(request, closetid=None):
     username = None
     closet = get_object_or_404(Closet, id=closetid)
     if request.user.is_authenticated:
@@ -177,7 +179,29 @@ def openCloset(request, closetid=None):
             'empty': empty
         }
 
-        return render(request, 'blog/open_closet.html', context)
+        return render(request, 'blog/open_my_closet.html', context)
+
+@login_required
+def openUserCloset(request, username=None, closetname=None):
+    closet = get_object_or_404(Closet, name=closetname)
+    user = get_object_or_404(User, username=username)
+    if request.user.is_authenticated:
+        if len(closetClothes.objects.filter(closet=closet.id)) == 0:
+            empty = True
+        else:
+            empty = False
+        clothes = []
+        for c in closetClothes.objects.filter(closet=closet.id):
+            clothes.append(c.clothing_item)
+        context = {
+            'closet': closet,
+            'username': username,
+            'closetClothes': clothes,
+            'title': closet.name,
+            'empty': empty
+        }
+
+        return render(request, 'blog/open_user_closet.html', context)
 
 @login_required
 def Clothes(request):
@@ -207,6 +231,7 @@ def AddToCloset(request, itemid=None):
             if request.POST.get(str(c.id)) == "clicked":
                 adding = closetClothes(closet=c, clothing_item=item, user=request.user)
                 adding.save()
+        return redirect(reverse('my-clothes'))
     Closets = Closet.objects.filter(closetUser=request.user)
     closets = []
     for c in Closets:
@@ -246,7 +271,7 @@ def deleteItem(request, itemid=None, closetid=None):
         # delete item
         item.delete()
         #return render(request, "blog/user_clothes.html", context)
-        return redirect(reverse('user-clothes'))
+        return redirect(reverse('my-clothes'))
     else:
         closet = get_object_or_404(Closet, id=closetid)
         closetitem = get_object_or_404(closetClothes, closet=closet, clothing_item=item)
@@ -257,4 +282,4 @@ def deleteItem(request, itemid=None, closetid=None):
 def deleteCloset(request, closetid=None):
     closet = get_object_or_404(Closet, id=closetid)
     closet.delete()
-    return redirect(reverse('user-closets'))
+    return redirect(reverse('my-closets'))
