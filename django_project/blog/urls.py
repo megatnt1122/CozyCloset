@@ -12,7 +12,6 @@ urlpatterns = [
     path('items/', include('item.urls')),
     path('inbox/', include('conversation.urls')),
     path('dashboard/', include('dashboard.urls')),
-    path('admin/', admin.site.urls),
     path('user/<str:username>', UserPostListView.as_view(), name='user-posts'),
     path('post/<int:pk>/', PostDetailView.as_view(), name='post-detail'),
     path('post/new/', PostCreateView.as_view(), name='post-create'),
