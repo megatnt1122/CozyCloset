@@ -23,7 +23,7 @@ urlpatterns = [
     path('clothes/', views.Clothes, name='my-clothes'),
     path('clothes/<str:itemid>/addtocloset/', views.AddToCloset, name='addto-closet'),
     path('clothes/<str:itemid>/addtopost/', PostCreateView.as_view(), name='addto-post'),
-    #####'clothes/<str:itemid>/addtopost/'
+
 ]
 
 # <app>/<model>_<viewtype>.html

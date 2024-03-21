@@ -61,22 +61,12 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         extra_context['userClothes'] = userClothes.objects.filter(bloguser=self.request.user)
         try:
             shareditem = get_object_or_404(userClothes, id=self.kwargs.get('itemid')) # This didn't break
-            print(shareditem)
             extra_context['shareditem'] = shareditem
-            print("Old status: {}".format(extra_context))
-            adding = Post(title=Post.title, content=Post.content, date_posted=Post.date_posted, author=request.user, image='default.jpg')
+            adding = Post(title=Post.title, content=Post.content, date_posted=Post.date_posted, author=request.user, image='download.jpg') #might need image = and look up about updateing
             adding.save()
-            print()
-            print("NEW status: {}".format(adding))
         except:
             pass
         return extra_context
-    
-    '''if request.POST.get("save"):
-        for c in userClothes.objects.filter(bloguser=self.request.user):
-            if request.POST.get(str(c.id)) == "clicked":
-                adding = (title, content, date_posted, author, image=c  )
-                adding.save() '''
     
     def form_valid(self, form):
         form.instance.author = self.request.user

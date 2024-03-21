@@ -10,11 +10,10 @@ class Post(models.Model):
     date_posted = models.DateTimeField(default=timezone.now)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     
-    image = models.ImageField(null=True, blank=True, upload_to='post_photos')
+    image = models.ImageField(default='', null=True, blank=True, upload_to='post_photos')
     #Need to change to default.jpg to see differents
     def save(self, *args, **kwargs):
         super(Post, self).save(*args, **kwargs)
-        
         try:
             img = Image.open(self.image.path)
             if img.height > 300 or img.width > 300:

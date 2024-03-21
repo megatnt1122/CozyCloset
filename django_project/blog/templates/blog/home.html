@@ -13,7 +13,7 @@
 			<div class="article-metadata">
 			  <a class="mr-2" href="{% url 'user-closets' post.author.username %}">{{ post.author }}</a>
 			  <small class="text-muted">{{ post.date_posted | date:"F d, Y" }}</small>
-  			  <a class="navbar-brand mr-4" href="{% url 'post-detail' post.id %}"><img class="logo" src="/media/pencil.png" width="25" height="25" alt="Logo"></a>
+  			  <a class="navbar-brand mr-4" href="{% url 'post-detail' post.id %}"><img class="logo" src="/media/pencil.jpg" width="25" height="25" alt="Logo"></a>
 			  <!-- Line above is so you can update/see post details if it doesn't have a title -->
 			</div>
 			<h2><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>
