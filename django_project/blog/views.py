@@ -49,12 +49,12 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     fields = ['title', 'content']
     user = Post.author
-    
+
     #Get info from another model
     #Help from https://www.geeksforgeeks.org/how-to-pass-additional-context-into-a-class-based-view-django/
     #Way number 1
     #extra_context ={'userClothes': userClothes.objects.filter(bloguser=self.request.user)}
-    
+
     #Way number 2
     def get_context_data(self,*args, **kwargs):
         extra_context = super(PostCreateView, self).get_context_data(*args,**kwargs)
@@ -67,11 +67,11 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         except:
             pass
         return extra_context
-    
+
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
-        
+
     #def get_item(self):
         #shareitemid = get_object_or_404(User, itemid=self.kwargs.get('itemid'))
         #print(shareitemid)
@@ -96,6 +96,20 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
     success_url = '/'
+
+    def test_func(self):
+        post = self.get_object()
+        if self.request.user == post.author:
+            return True
+        return False
+
+class PostAddImgView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Post
+    fields = ['title', 'content', 'Image']
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
 
     def test_func(self):
         post = self.get_object()
@@ -248,7 +262,7 @@ def AddToCloset(request, itemid=None):
     }
 
     return render(request, 'blog/AddToCloset.html', context)
-    
+
 @login_required
 def AddToPost(request, itemid=None):
     item = userClothes.objects.get(id=itemid)
@@ -258,7 +272,7 @@ def AddToPost(request, itemid=None):
             if request.POST.get(str(c.id)) == "clicked":
                 adding = closetClothes(closet=c, clothing_item=item, user=request.user) #Adding to Post
                 adding.save()
-    
+
     Closets = Closet.objects.filter(closetUser=request.user)
     closets = []
     context = {
