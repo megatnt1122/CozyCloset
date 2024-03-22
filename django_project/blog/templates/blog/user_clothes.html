@@ -47,11 +47,7 @@ h1{
 {% else %}
 	<h1>{{ username }}'s Clothes</h1>
 {% endif %}
-<div class="filter">
-	<a href="/post/new/{{item.id}}">
-		<button class="button share" style="float: right;">Share</button>
-	</a>
-</div>
+
 
 <ul>
 	{% for item in userClothes %}
