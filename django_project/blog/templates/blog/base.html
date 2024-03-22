@@ -32,15 +32,15 @@
 			  <a class="nav-item nav-link" href="{% url 'upload' %}">Upload</a>
 			  <a class="nav-item nav-link" href="{% url 'my-closets' %}">Closets</a>
 			  <a class="nav-item nav-link" href="{% url 'my-clothes' %}">Clothes</a>
-			  <a class="nav-item nav-link" href="{% url 'post-create' %}">New Post</a>
+			  <a class="nav-item nav-link" href="{% url 'core:home' %}">Market</a>
 			</div>
 			<!-- Navbar Right Side -->
 			<div class="navbar-nav">
 			{% if user.is_authenticated %}
-				<form method="post" action="{% url 'logout' %}">
-					{% csrf_token %}
-					<button type="submit">logout</button>
-				</form>
+				<form class="form-inline my-2 my-lg-0" method="GET" placeholder="Search Users.." action="{% url 'user-search' %}">
+            		<input class="form-control mr-sm-2" type="search" name="search">
+            		<button class="btn btn btn-outline-info my-2 my-sm-0" type="submit" style="margin-right: 10px;">Search</button>
+        		</form>
 			  <a class="nav-item nav-link" href="{% url 'profile' %}">Profile</a>
 			{% else %}
 			  <a class="nav-item nav-link" href="{% url 'login' %}">Login</a>

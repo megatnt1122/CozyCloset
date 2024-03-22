@@ -11,8 +11,8 @@ from django.views.generic import (
     DeleteView
 )
 from .models import Post
-from .forms import Upload, AddToCloset
-from .models import clothingStyles, clothingCategories, userClothes, Closet, closetClothes
+from .forms import *
+from .models import *
 from django.db.models import Q
 
 
@@ -48,36 +48,17 @@ class PostDetailView(DetailView):
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
-    fields = ['title', 'content', 'image']
+    fields = ['title', 'content']
     user = Post.author
 
-    #Get info from another model
-    #Help from https://www.geeksforgeeks.org/how-to-pass-additional-context-into-a-class-based-view-django/
-    #Way number 1
-    #extra_context ={'userClothes': userClothes.objects.filter(bloguser=self.request.user)}
-    
-    #Way number 2
-    def get_context_data(self,*args, **kwargs):
-        extra_context = super(PostCreateView, self).get_context_data(*args,**kwargs)
-        extra_context['userClothes'] = userClothes.objects.filter(bloguser=self.request.user)
-        return extra_context
-        
-    '''if request.POST.get("save"):
-        for c in userClothes.objects.filter(bloguser=self.request.user):
-            if request.POST.get(str(c.id)) == "clicked":
-                adding = (title, content, date_posted, author, image=c  )
-                adding.save() '''    
-        
-    #help from here
-    #https://www.geeksforgeeks.org/how-to-pass-additional-context-into-a-class-based-view-django/
-    #extra_context ={'userClothes': userClothes.objects.all()}
-    def get_context_data (self, *args, **kwargs):
-        extra_context = super(PostCreateView, self).get_context_data(*args,**kwargs)
-        extra_context['userClothes'] = userClothes.objects.filter(bloguser=self.request.user)
-        return extra_context
+    # dispatch is called when the class instance loads
+    def dispatch(self, request, *args, **kwargs):
+        self.item = kwargs.get('itemid', "")
+        print(self.item)
 
-    #item = userClothes.objects.get(id=itemid)
-    #item = userClothes.objects.get(id=pk)
+
+        # needed to have an HttpResponse
+        return super(PostCreateView, self).dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -86,7 +67,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
-    fields = ['title', 'content', 'image']
+    fields = ['title', 'content']
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -113,12 +94,6 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 class UploadView(LoginRequiredMixin, CreateView):
     model = userClothes
     fields = ['name','category','style','color','image']
-
-    # only shows the users' closets in the closet drop down when uploading a new item
-    #def get_form(self, *args, **kwargs):
-    #    form = super(UploadView, self).get_form(*args, **kwargs)
-    #    form.fields['closet'].queryset = Closet.objects.filter(closetUser=self.request.user)
-    #    return form
 
     # links the current user to the item being uploaded
     def form_valid(self, form):
@@ -294,3 +269,15 @@ def deleteCloset(request, closetid=None):
     closet = get_object_or_404(Closet, id=closetid)
     closet.delete()
     return redirect(reverse('my-closets'))
+
+class SearchView(ListView):
+    model = User
+    template_name = "blog/user_list.html"
+    context_object_name = 'users'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_query = self.request.GET.get('search')
+        if search_query:
+            queryset = queryset.filter(username__icontains=search_query)
+        return queryset
