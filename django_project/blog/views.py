@@ -194,16 +194,33 @@ def Clothes(request):
     username = None
     if request.user.is_authenticated:
         username = request.user.username
-        if len(userClothes.objects.filter(bloguser=request.user)) == 0:
-            empty = True
-        else:
-            empty = False
+        user_clothes = userClothes.objects.filter(bloguser=request.user)
+        categories = clothingCategories.objects.values_list('category', flat=True).distinct()
+        styles = clothingStyles.objects.values_list('style', flat=True).distinct()
+        color_list = colors.objects.values_list('color', flat=True).distinct()
+
+        # Filtering logic
+        category_filter = request.GET.get('category')
+        style_filter = request.GET.get('style')
+        color_filter = request.GET.get('color')
+
+        filtered_items = user_clothes
+        if category_filter:
+            filtered_items = filtered_items.filter(category__category=category_filter)
+        if style_filter:
+            filtered_items = filtered_items.filter(style__style=style_filter)
+        if color_filter:
+            filtered_items = filtered_items.filter(color__color=color_filter)
+
         context = {
             'user': request.user,
             'username': username,
-            'userClothes': userClothes.objects.filter(bloguser=request.user),
-            'title': 'All Clothes',
-            'empty': empty
+            'userClothes': user_clothes,
+            'categories': categories,
+            'styles': styles,
+            'colors': color_list,  # Changed variable name to color_list
+            'filteredItems': filtered_items,
+            'empty': len(user_clothes) == 0
         }
 
         return render(request, 'blog/user_clothes.html', context)

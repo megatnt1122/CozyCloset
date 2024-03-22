@@ -53,9 +53,10 @@ class userClothes(models.Model):
 		self.name = self.name.title()
 		super(userClothes, self).save(*args, **kwargs)
 		img = Image.open(self.image.path)
-		output_size = (300, 300)
-		img.thumbnail(output_size)
-		img.save(self.image.path)
+		if img.width > 600 or img.height > 600:
+			output_size = (600, 600)
+			img.thumbnail(output_size)
+			img.save(self.image.path)
 
 	def get_absolute_url(self):
 		return '/upload/'
