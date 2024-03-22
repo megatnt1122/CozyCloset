@@ -1,6 +1,50 @@
 {% extends "blog/base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
+<style type="text/css">
+.button{
+	width: 200;
+	background: none;
+	padding: 5px 15px;
+	text-align: center;
+	text-decoration: none;
+  	display: inline-block;
+  	font-size: 16px;
+  	margin: 10px;
+  	margin-left: 0px;
+  	transition-duration: 0.4s;
+  	cursor: pointer;
+}
+
+.update{
+	color: black; 
+	border: 2px solid #008CBA;
+	padding: 5px 15px;
+	text-align: center;
+	text-decoration: none;
+  	display: inline-block;
+  	font-size: 16px;
+  	margin: 4px 2px;
+  	transition-duration: 0.4s;
+  	cursor: pointer;
+  	position: relative;
+}
+
+.update:hover{
+	background-color: #008CBA;
+	color: white;
+}
+
+.logout{
+	color: black; 
+	border: 2px solid #f44336;
+}
+
+.logout:hover{
+	background-color: #f44336;
+	color: white;
+}
+</style>
 	<div class="content-section">
 	  <div class="media">
 			<img class="rounded-circle account-img" src="{{ user.profile.image.url }}">
@@ -17,8 +61,12 @@
 				{{ p_form | crispy }}
 			</fieldset>
 			<div class="form-group">
-				<button class="btn btn-outline-info" type="submit">Update</button>
+				<button class="button update" type="submit">Update</button>
 			</div>
 		</form>
+		<form method="post" action="{% url 'logout' %}">
+					{% csrf_token %}
+					<button class="button logout" type="submit">Logout</button>
+				</form>
 	</div>
 {% endblock content %}
