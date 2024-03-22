@@ -8,7 +8,6 @@ class Upload(forms.Form):
 	category = forms.ChoiceField(choices=categoryChoices)
 	style = forms.ChoiceField(choices=styleChoices)
 	color = forms.ChoiceField(choices=colorChoices)
-	
 
 class AddToCloset(forms.Form):
 	check = forms.BooleanField()

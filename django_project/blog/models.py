@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.urls import reverse
 from PIL import Image
+from pathlib import Path
 
 class Post(models.Model):
     title = models.CharField(blank=True, max_length=100)
@@ -11,8 +12,14 @@ class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     
     image = models.ImageField(default='', null=True, blank=True, upload_to='post_photos')
+    
     #Need to change to default.jpg to see differents
+    
+    def __str__(self):
+        return self.title
+        
     def save(self, *args, **kwargs):
+        self.name = self.title.title()
         super(Post, self).save(*args, **kwargs)
         try:
             img = Image.open(self.image.path)
@@ -20,13 +27,9 @@ class Post(models.Model):
                 output_size = (300, 300)
                 img.thumbnail(output_size)
                 img.save(self.image.path)
-            print(img)
         except:
             pass
-
-    def __str__(self):
-        return self.title
-
+        
     def get_absolute_url(self):
         return reverse('post-detail', kwargs={'pk': self.pk})
 

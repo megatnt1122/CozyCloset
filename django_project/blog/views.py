@@ -44,12 +44,13 @@ class UserPostListView(ListView):
 
 class PostDetailView(DetailView):
     model = Post
-
+    
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
-    fields = ['title', 'content']
-    user = Post.author
-
+    fields = ['title', 'content', 'image']
+    User = Post.author
+    
+    
     #Get info from another model
     #Help from https://www.geeksforgeeks.org/how-to-pass-additional-context-into-a-class-based-view-django/
     #Way number 1
@@ -62,7 +63,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         try:
             shareditem = get_object_or_404(userClothes, id=self.kwargs.get('itemid')) # This didn't break
             extra_context['shareditem'] = shareditem
-            adding = Post(title=Post.title, content=Post.content, date_posted=Post.date_posted, author=request.user, image='download.jpg') #might need image = and look up about updateing
+            adding = Post(image=shareditem) #might need image = and look up about updateing
             adding.save()
         except:
             pass
@@ -103,7 +104,7 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
             return True
         return False
 
-class PostAddImgView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+'''class PostAddImgView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
     fields = ['title', 'content', 'Image']
 
@@ -115,7 +116,7 @@ class PostAddImgView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         post = self.get_object()
         if self.request.user == post.author:
             return True
-        return False
+        return False'''
 
 # the view for the upload page
 class UploadView(LoginRequiredMixin, CreateView):
