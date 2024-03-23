@@ -15,12 +15,10 @@
 		</div>
 		<h2 class="article-title">{{ object.title }}</h2>
 		<p class="article-content">{{ object.content }}</p>
+		{% if object.image.url != undefined %}
+		<img class="image" src="{{ object.image.url }}">
+		{% endif %}
+		<!---<img class="image" src="{{ shareditem.image.url }}"> Might need this for later--->
 	  </div>
 	</article>
-	Post.image.url
-	{{Post.image.url}}
-	{{Post.image}}
-	{{Post.url}}
-	<img src=" {{ Post.image.url }}">
-	<img src=" {{ shareditem.image.url }}">
 {% endblock content %}

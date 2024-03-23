@@ -11,7 +11,4 @@ class Upload(forms.Form):
 
 class AddToCloset(forms.Form):
 	check = forms.BooleanField()
-    
-class AddToPost(forms.Form):
-	check = forms.BooleanField()
 

@@ -48,8 +48,6 @@ class PostDetailView(DetailView):
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     fields = ['title', 'content', 'image']
-    User = Post.author
-    
     
     #Get info from another model
     #Help from https://www.geeksforgeeks.org/how-to-pass-additional-context-into-a-class-based-view-django/
@@ -61,10 +59,14 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         extra_context = super(PostCreateView, self).get_context_data(*args,**kwargs)
         extra_context['userClothes'] = userClothes.objects.filter(bloguser=self.request.user)
         try:
-            shareditem = get_object_or_404(userClothes, id=self.kwargs.get('itemid')) # This didn't break
+            shareditem = userClothes.objects.get(id=self.kwargs.get('itemid')) # This didn't break
             extra_context['shareditem'] = shareditem
-            adding = Post(image=shareditem) #might need image = and look up about updateing
-            adding.save()
+            #print("1: {}".format(shareditem))
+            #print("2: {}".format(shareditem.image))
+            #print("3: {}".format(shareditem.image.url))
+            #Post.image = models.ImageField(default='', null=True, blank=True, upload_to='post_photos')
+            Post.image = sharediteam.image
+            Post.save()
         except:
             pass
         return extra_context
@@ -81,7 +83,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
-    fields = ['title', 'content']
+    fields = ['title', 'content', 'image']
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -103,20 +105,6 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         if self.request.user == post.author:
             return True
         return False
-
-'''class PostAddImgView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = Post
-    fields = ['title', 'content', 'Image']
-
-    def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
-
-    def test_func(self):
-        post = self.get_object()
-        if self.request.user == post.author:
-            return True
-        return False'''
 
 # the view for the upload page
 class UploadView(LoginRequiredMixin, CreateView):
@@ -263,25 +251,6 @@ def AddToCloset(request, itemid=None):
     }
 
     return render(request, 'blog/AddToCloset.html', context)
-
-@login_required
-def AddToPost(request, itemid=None):
-    item = userClothes.objects.get(id=itemid)
-
-    if request.POST.get("save"):
-        for c in Closet.objects.filter(closetUser=request.user):
-            if request.POST.get(str(c.id)) == "clicked":
-                adding = closetClothes(closet=c, clothing_item=item, user=request.user) #Adding to Post
-                adding.save()
-
-    Closets = Closet.objects.filter(closetUser=request.user)
-    closets = []
-    context = {
-        'user': request.user,
-        'closets': closets, #Make need to change
-    }
-
-    return render(request, 'blog/AddToPost.html', context)
 
 @login_required
 def deleteItem(request, itemid=None, closetid=None):
