@@ -23,6 +23,7 @@ urlpatterns = [
     path('createcloset/', ClosetCreateView.as_view(), name='create-create'),
     path('myclosets/', views.myClosets, name="my-closets"),
     path('myclosets/<str:closetid>/', views.openMyCloset, name="open-closet"),
+    path('myclosets/<int:closetid>/edit/', ClosetUpdateView.as_view(), name='closet-edit'),
     path('myclosets/<str:closetid>/delete/', views.deleteCloset, name="delete-closet"),
     path('<str:username>/closets/', views.userClosets, name="user-closets"),
     path('<str:username>/closets/<str:closetname>/', views.openUserCloset, name="open-usercloset"),
@@ -31,6 +32,7 @@ urlpatterns = [
     path('clothes/', views.Clothes, name='my-clothes'),
     path('clothes/<str:itemid>/addtocloset/', views.AddToCloset, name='addto-closet'),
     path('clothes/<str:itemid>/addtopost/', views.AddToPost, name='addto-post'),
+    path('createoutfit/', views.createOutfit, name='create-outfit'),
     path('search/', SearchView.as_view(), name='user-search'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

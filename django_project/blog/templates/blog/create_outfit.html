@@ -1,0 +1,142 @@
+{% extends "blog/base.html" %}
+{% block content %}
+    <div class="outfit-creation-container">
+        <h2 style="text-align: center;">Create Your Outfit</h2>
+        <form method="post" id="outfitForm" class="outfit-form">
+            {% csrf_token %}
+            
+            <!-- Hidden form fields to store selected item IDs -->
+            <input type="hidden" name="top" id="selectedTop">
+            <input type="hidden" name="bottoms" id="selectedBottoms">
+            <input type="hidden" name="footwear" id="selectedFootwear">
+            <input type="hidden" name="accessory" id="selectedAccessory" value="">
+            <input type="hidden" name="outerwear" id="selectedOuterwear" value="">
+
+            <!-- Template sections for each category of clothing -->
+            <div class="clothing-categories">
+                {% for category, items in categories.items %}
+                    <div id="{{category}}Selection" class="clothingSelection">
+                        <h3>{{ category|capfirst }}</h3>
+                        <div class="clothing-items-container">
+                            {% if items %}
+                                {% for item in items %}
+                                    <div class="clothingItem" data-category="{{ category }}" data-id="{{ item.id }}" onclick="selectItem(this);">
+                                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="clothingImage">
+                                        <div class="itemName">{{ item.name }}</div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="no-items">No items available.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="centered">
+                <button type="submit" class="btn btn-primary">Save Outfit</button>
+            </div>
+        </form>
+    </div>
+
+    <style>
+    .outfit-creation-container {
+        max-width: 960px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    .outfit-form {
+        background-color: transparent;
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    .clothingSelection {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 40px;
+    }
+
+    .clothing-items-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .clothingItem {
+        cursor: pointer;
+        background: #ffffff;
+        border: 2px solid #e6e9ed;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+        width: 180px; /* Standardized width for uniformity */
+        height: 260px; /* Standardized height to maintain the item size */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; /* Distributes space evenly inside the item card */
+    }
+
+    .clothingItem.selected {
+        border-color: #3498db;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        outline: 3px solid #3498db;
+        outline-offset: 2px;
+    }
+
+    .clothingImage {
+        height: 2000px; /* Fixed height to standardize image sizes */
+        width: 150px; /* Fixed width to standardize image sizes */
+        object-fit: cover; /* Ensures images cover the area without distorting */
+        margin: 10px auto; /* Centering the image */
+        border-radius: 8px; /* Optional: Adds rounded corners to the images */
+    }
+
+    .itemName {
+        padding: 5px 10px;
+        background-color: #f8f9fa;
+        color: #333;
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .no-items {
+        font-style: italic;
+        color: #6c757d;
+    }
+
+    .btn-primary {
+        margin-top: 20px;
+        padding: 10px 30px;
+        font-size: 18px;
+        border-radius: 8px;
+        align-content: center;
+    }
+
+    .centered {
+        text-align: center;
+    }
+</style>
+
+
+
+
+    <script>
+        function selectItem(element) {
+            const category = element.dataset.category;
+            document.querySelectorAll('.clothingItem[data-category="' + category + '"]').forEach(item => {
+                item.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            document.getElementById('selected' + category.charAt(0).toUpperCase() + category.slice(1)).value = element.dataset.id;
+            console.log('Category:', category);  // Should log 'top'
+            console.log('Computed ID:', 'selected' + category.charAt(0).toUpperCase() + category.slice(1));  // Should log 'selectedTop'
+            console.log('Element:', document.getElementById('selected' + category.charAt(0).toUpperCase() + category.slice(1)));  // Should log the HTML element, not null
+        }
+    </script>
+{% endblock %}

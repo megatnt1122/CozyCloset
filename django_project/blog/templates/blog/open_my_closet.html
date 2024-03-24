@@ -1,70 +1,50 @@
 {% extends "blog/base.html" %}
 {% block content %}
-<style>
-h1{
-	text-align: center;
-	margin-bottom: 25;
-}
+<style type="text/css">
+    .header {
+        text-align: center;
+    }
 
-p{
-	text-align: center;
-	margin-bottom: 25;
-}
+    .card-title {
+    	text-align: center;
+    }
 
-.button{
-	width: 300;
-	float: left;
-	background: none;
-	padding: 5px 15px;
-	text-align: center;
-	text-decoration: none;
-  	display: inline-block;
-  	font-size: 16px;
-  	margin: 10px;
-  	margin-left: 0px;
-  	transition-duration: 0.4s;
-  	cursor: pointer;
-}
+    .card {
+        transition: transform 0.3s ease; /* Smooth transition on hover */
+    }
 
-.remove{
-	color: black; 
-	border: 2px solid #f44336;
-}
-
-.remove:hover{
-	background-color: #f44336;
-	color: white;
-}
+    .card:hover {
+        transform: translateY(-5px); /* Move card up slightly on hover */
+    }
 </style>
 
-{% if empty %}
-	<h1>{{ username }}'s Closet: {{ title }}</h1>
-	<p>(This Closet Is Empty!)</p>
-{% else %}
-	<h1>{{ username }}'s Closet: {{ title }}</h1>
-{% endif %}
+<div class="header">
+    {% if empty %}
+        <h1>{{ username }}'s Closet: {{ title }}</h1>
+        <p>(This Closet Is Empty!)</p>
+    {% else %}
+        <h1>{{ username }}'s Closet: {{ title }}</h1>
+    {% endif %}
+</div>
 
-<ul>
-	{% for item in closetClothes %}
-		<div class="container2">
-		<div class="image">
-			<img src=" {{ item.image.url }}">
-		</div>
-			<div class="text">
-				<big style="font-size:40px; font-weight:bold; color:#ce796b;">
-					{{ item.name }}
-				</big><br>
-		<pre class="tab">category:	{{ item.category }}</pre>
-		<pre class="tab4">style:	{{ item.style }}</pre>
-		<pre class="tab4">color:	{{ item.color }}</pre>
-			</div>
-		<br>
-		<a href="/delete/{{item.id}}/{{closet.id}}/">
-			<button class="button remove">Remove</button>
-		</a>
-		<br>
-		</div>
-		<hr>
-	{% endfor %}
-</ul>
+<!-- Clothes List -->
+<div class="row mt-4">
+    {% for item in closetClothes %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <img src="{{ item.image.url }}" class="card-img-top img-fluid" style="height: 350px;" alt="Clothing Image">
+            <div class="card-body">
+                <h5 class="card-title">{{ item.name }}</h5>
+                <p class="card-text">Category: {{ item.category }}</p>
+                <p class="card-text">Style: {{ item.style }}</p>
+                <p class="card-text">Color: {{ item.color }}</p>
+                <div class="btn-group" role="group">
+                	<a href="/delete/{{ item.id }}/{{ closet.id }}" class="btn btn-danger">Remove</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
 {% endblock %}

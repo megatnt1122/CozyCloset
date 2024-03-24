@@ -1,5 +1,15 @@
 {% extends "blog/base.html" %}
 {% block content %}
+<style type="text/css">
+	.card {
+        transition: transform 0.3s ease; /* Smooth transition on hover */
+    }
+
+    .card:hover {
+        transform: translateY(-5px); /* Move card up slightly on hover */
+    }
+</style>
+
 <div class="container">
     <h1 class="text-center">{{ username }}'s Closet</h1>
     {% if empty %}
@@ -47,7 +57,7 @@
             <div class="card h-100">
                 <img src="{{ item.image.url }}" class="card-img-top img-fluid" style="height: 350px;" alt="Clothing Image"> <!-- Set height to 350px -->
                 <div class="card-body">
-                    <h5 class="card-title">{{ item.name }}</h5>
+                    <h5 class="card-title" style="text-align: center;">{{ item.name }}</h5>
                     <p class="card-text">Category: {{ item.category }}</p>
                     <p class="card-text">Style: {{ item.style }}</p>
                     <p class="card-text">Color: {{ item.color }}</p>

@@ -53,18 +53,30 @@ class userClothes(models.Model):
 		self.name = self.name.title()
 		super(userClothes, self).save(*args, **kwargs)
 		img = Image.open(self.image.path)
-		if img.width > 600 or img.height > 600:
-			output_size = (600, 600)
-			img.thumbnail(output_size)
-			img.save(self.image.path)
+		output_size = (600, 600)
+		img.thumbnail(output_size)
+		img.save(self.image.path)
 
 	def get_absolute_url(self):
 		return '/upload/'
+
+class Outfit(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    top = models.ForeignKey(userClothes, on_delete=models.CASCADE, related_name='Top')
+    bottoms = models.ForeignKey(userClothes, on_delete=models.CASCADE, related_name='Bottoms')
+    footwear = models.ForeignKey(userClothes, on_delete=models.CASCADE, related_name='Footwear')
+    accessory = models.ForeignKey(userClothes, on_delete=models.CASCADE, related_name='Accessory', blank=True, null=True)
+    outerwear = models.ForeignKey(userClothes, on_delete=models.CASCADE, related_name='Outerwear', blank=True, null=True)
+
+    def __str__(self):
+        return f"Outfit for {self.user.username}"
+
 
 # Models for closets
 class Closet(models.Model):
 	name = models.CharField(max_length=25, default='')
 	closetUser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+	is_public = models.BooleanField(default=True, verbose_name="Public")
 
 	def __str__(self):
 		return self.name
