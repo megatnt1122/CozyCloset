@@ -1,7 +1,7 @@
 {% extends "blog/base.html" %}
 {% block content %}
 <style type="text/css">
-	.card {
+    .card {
         transition: transform 0.3s ease; /* Smooth transition on hover */
     }
 
@@ -11,7 +11,6 @@
 </style>
 
 <div class="container">
-    <h1 class="text-center">{{ username }}'s Closet</h1>
     {% if empty %}
         <p class="text-center">You haven't uploaded any clothes yet.</p>
     {% endif %}
@@ -64,7 +63,7 @@
                     <div class="btn-group" role="group">
                         <a href="/delete/{{ item.id }}/" class="btn btn-danger">Delete</a>
                         <a href="/clothes/{{ item.id }}/addtocloset/" class="btn btn-success">Add To Closet</a>
-                        <a href="/clothes/{{item.id}}/addtopost/" class="btn btn-info">Share</a>
+                        <a href="/post/new/{{ item.id }}" class="btn btn-info">Share</a>
                     </div>
                 </div>
             </div>

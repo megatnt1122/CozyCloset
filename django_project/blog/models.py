@@ -19,8 +19,8 @@ class Post(models.Model):
         super(Post, self).save(*args, **kwargs)
         try:
             img = Image.open(self.image.path)
-            if img.height > 300 or img.width > 300:
-                output_size = (300, 300)
+            if img.height > 150 or img.width > 150:
+                output_size = (150, 150)
                 img.thumbnail(output_size)
                 img.save(self.image.path)
         except:
@@ -31,49 +31,47 @@ class Post(models.Model):
 
 # Models for uploading
 class clothingCategories(models.Model):
-	category = models.CharField(max_length=50)
+    category = models.CharField(max_length=50)
 
-	def __str__(self):
-		return self.category
-
+    def __str__(self):
+        return self.category
 
 class clothingStyles(models.Model):
-	style = models.CharField(max_length=50)
+    style = models.CharField(max_length=50)
 
-
-	def __str__(self):
-		return self.style
+    def __str__(self):
+        return self.style
 
 class colors(models.Model):
-	color = models.CharField(max_length=15)
+    color = models.CharField(max_length=15)
 
-	def __str__(self):
-		return self.color
+    def __str__(self):
+        return self.color
 
 class userClothes(models.Model):
-	name = models.CharField(max_length=25, default='', verbose_name='*Name')
-	category = models.ForeignKey(clothingCategories, on_delete=models.CASCADE, verbose_name='*Category')
-	style = models.ForeignKey(clothingStyles, on_delete=models.CASCADE, verbose_name='*Style')
-	color = models.ForeignKey(colors, on_delete=models.CASCADE, verbose_name='*Color')
-	image = models.ImageField(default='', upload_to='clothing_photos')
-	bloguser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+    name = models.CharField(max_length=25, default='', verbose_name='*Name')
+    category = models.ForeignKey(clothingCategories, on_delete=models.CASCADE, verbose_name='*Category')
+    style = models.ForeignKey(clothingStyles, on_delete=models.CASCADE, verbose_name='*Style')
+    color = models.ForeignKey(colors, on_delete=models.CASCADE, verbose_name='*Color')
+    image = models.ImageField(default='', upload_to='clothing_photos')
+    bloguser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
 
+    def __str__(self):
+        return self.name
 
-	def __str__(self):
-		return self.name
+    def save(self, *args, **kwargs):
+        self.name = self.name.title()
+        super(userClothes, self).save(*args, **kwargs)
+        img = Image.open(self.image.path)
+        output_size = (600, 600)
+        img.thumbnail(output_size)
+        img.save(self.image.path)
 
-	def save(self, *args, **kwargs):
-		self.name = self.name.title()
-		super(userClothes, self).save(*args, **kwargs)
-		img = Image.open(self.image.path)
-		output_size = (600, 600)
-		img.thumbnail(output_size)
-		img.save(self.image.path)
-
-	def get_absolute_url(self):
-		return '/upload/'
+    def get_absolute_url(self):
+        return '/upload/'
 
 class Outfit(models.Model):
+    name = models.CharField(max_length=25, default='', verbose_name='Name')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     top = models.ForeignKey(userClothes, on_delete=models.CASCADE, related_name='Top')
     bottoms = models.ForeignKey(userClothes, on_delete=models.CASCADE, related_name='Bottoms')
@@ -82,30 +80,50 @@ class Outfit(models.Model):
     outerwear = models.ForeignKey(userClothes, on_delete=models.CASCADE, related_name='Outerwear', blank=True, null=True)
 
     def __str__(self):
-        return f"Outfit for {self.user.username}"
-
+        return self.name
 
 # Models for closets
 class Closet(models.Model):
-	name = models.CharField(max_length=25, default='')
-	closetUser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
-	is_public = models.BooleanField(default=True, verbose_name="Public")
+    name = models.CharField(max_length=25, default='')
+    closetUser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+    is_public = models.BooleanField(default=True, verbose_name="Public")
 
-	def __str__(self):
-		return self.name
+    def __str__(self):
+        return self.name
 
-	def save(self, *args, **kwargs):
-		self.name = self.name.title()
-		super(Closet, self).save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        self.name = self.name.title()
+        super(Closet, self).save(*args, **kwargs)
 
-	def get_absolute_url(self):
-		return reverse('my-closets')
+    def get_absolute_url(self):
+        return reverse('my-closets')
 
 class closetClothes(models.Model):
-	closet = models.ForeignKey(Closet, on_delete=models.CASCADE, default='')
-	clothing_item = models.ForeignKey(userClothes, on_delete=models.CASCADE, default='')
-	user = models.ForeignKey(User, on_delete=models.CASCADE, default=-1)
-    
+    closet = models.ForeignKey(Closet, on_delete=models.CASCADE, default='')
+    clothing_item = models.ForeignKey(userClothes, on_delete=models.CASCADE, default='')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=-1)
+
+class closetOutfits(models.Model):
+    closet = models.ForeignKey(Closet, on_delete=models.CASCADE, default='')
+    outfit = models.ForeignKey(Outfit, on_delete=models.CASCADE, default='')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=-1)
+
 class postClothes(models.Model):
-	clothing_item = models.ForeignKey(userClothes, on_delete=models.CASCADE, default='')
-	user = models.ForeignKey(User, on_delete=models.CASCADE, default=-1)
+    clothing_item = models.ForeignKey(userClothes, on_delete=models.CASCADE, default='')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=-1)
+
+class Convo(models.Model):
+    user = models.ForeignKey(User, related_name='convoUser', on_delete=models.CASCADE, default=1)
+    members = models.ManyToManyField(User, related_name='convos')
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('-modified_at',)
+
+
+class ConvoMessage(models.Model):
+    conversing = models.ForeignKey(Convo, related_name='convoMessage', on_delete=models.CASCADE, default=1)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User,related_name='created_message', on_delete=models.CASCADE, default=1)
