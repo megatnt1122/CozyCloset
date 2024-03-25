@@ -1,5 +1,5 @@
 from django import forms
-from .models import Outfit, userClothes
+from .models import *
 
 class OutfitForm(forms.ModelForm):
     class Meta:
@@ -15,3 +15,13 @@ class OutfitForm(forms.ModelForm):
             self.fields['footwear'].queryset = userClothes.objects.filter(category__category='Footwear', bloguser=user)
             self.fields['accessory'].queryset = userClothes.objects.filter(category__category='Accessory', bloguser=user)
             self.fields['outerwear'].queryset = userClothes.objects.filter(category__category='Outerwear', bloguser=user)
+
+class DirectMessagingForm(forms.ModelForm):
+    class Meta:
+        model = ConvoMessage
+        fields = ['content',]
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'w-full py-4 px-6 rounded-xl border'
+            })
+        }

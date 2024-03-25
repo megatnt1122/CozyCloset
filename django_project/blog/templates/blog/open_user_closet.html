@@ -1,46 +1,234 @@
 {% extends "blog/base.html" %}
 {% block content %}
 <style type="text/css">
+    /* Header and overall layout */
     .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .header-title {
         text-align: center;
+    }
+
+    /* Card styles */
+    .card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-img-top {
+        height: 350px;
+        object-fit: cover;
+        border-top-left-radius: calc(0.25rem - 1px);
+        border-top-right-radius: calc(0.25rem - 1px);
+    }
+
+    .card-body {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
 
     .card-title {
         text-align: center;
+        margin-bottom: 10px;
     }
 
-    .card {
-        transition: transform 0.3s ease; /* Smooth transition on hover */
+    /* Button styles - Ensuring uniform style */
+    .switch-view-btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: 0.25rem;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.15s ease-in-out;
+        margin-left: 20px; /* Apply consistently or adjust as needed */
     }
 
-    .card:hover {
-        transform: translateY(-5px); /* Move card up slightly on hover */
+    .switch-view-btn:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-group {
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Responsiveness and alignment */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .col-md-4 {
+        width: 33.3333%;
+        padding: 15px;
+    }
+
+    /* Content visibility */
+    .content {
+        display: none;
+    }
+
+    .content.active {
+        display: block;
     }
 </style>
 
-<div class="header">
-    {% if empty %}
-        <h1>{{ username }}'s Closet: {{ title }}</h1>
-        <p>(This Closet Is Empty!)</p>
-    {% else %}
-        <h1>{{ username }}'s Closet: {{ title }}</h1>
+<div id="clothesList" class="content active">
+    <div class="header">
+        <div class="header-title">
+            <h1>{{ username }}'s Closet: {{ title }}</h1>
+            {% if empty %}
+                <p>This Closet Is Empty!</p>
+            {% endif %}
+        </div>
+        <button type="button" class="switch-view-btn" onclick="switchView()">Switch To Outfit View</button>
+    </div>
+
+    <!-- Clothes List -->
+    {% if not empty %}
+        {% for category, items in categorized_clothes.items %}
+            <h2 class="category-title">{{ category }}</h2>
+            <div class="row">
+                {% for item in items %}
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <img src="{{ item.image.url }}" alt="{{ item.name }}" class="card-img-top">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ item.name }}</h5>
+                                <p class="card-text">Style: {{ item.style }}</p>
+                                <p class="card-text">Color: {{ item.color }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
     {% endif %}
 </div>
 
-<!-- Clothes List -->
-<div class="row mt-4">
-    {% for item in closetClothes %}
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <img src="{{ item.image.url }}" class="card-img-top img-fluid" style="height: 350px;" alt="Clothing Image">
-            <div class="card-body">
-                <h5 class="card-title">{{ item.name }}</h5>
-                <p class="card-text">Category: {{ item.category }}</p>
-                <p class="card-text">Style: {{ item.style }}</p>
-                <p class="card-text">Color: {{ item.color }}</p>
-            </div>
-        </div>
+<!-- Alternative View (View 2) -->
+<div id="alternativeView" class="content">
+<style type="text/css">
+    /* Your existing styles */
+    .outfit-gallery-container {
+        max-width: 1200px;
+        margin: 20px auto;
+    }
+
+    .outfits-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 30px;
+    }
+
+    .outfit {
+        border: 2px solid #007bff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        display: flex;
+        flex-direction: column; /* Align children vertically */
+        justify-content: space-between; /* Distribute space between elements */
+    }
+
+    .outfit:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .outfit-details {
+        text-align: center;
+        padding: 15px;
+        background-color: #f8f9fa;
+        flex-grow: 1; /* Allow the details to fill available space */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; /* Distribute space within the card */
+    }
+
+    .outfit-image {
+        width: 120px; /* Adjust based on your preference */
+        height: 160px; /* Adjust based on your preference */
+        object-fit: cover; /* Keeps the aspect ratio and fills the space */
+        margin: 5px auto; /* Center the image and provide margin */
+        border-radius: 8px;
+    }
+
+    .btn-group {
+        margin-top: auto; /* Push the button group to the bottom */
+        width: 100%; /* Make button group take full width of the card */
+        display: flex;
+        justify-content: center; /* Center button group if needed */
+    }
+
+    /* Your other styles remain unchanged */
+</style>
+
+<div class="header">
+    <div class="header-title">
+        <h1>{{ username }}'s Closet: {{ title }}</h1>
+        {% if empty %}
+            <p>(This Closet Is Empty!)</p>
+        {% endif %}
     </div>
-    {% endfor %}
+    <button type="button" class="switch-view-btn" onclick="switchView()">Switch To Item View</button>
 </div>
+
+<div class="outfit-gallery-container">
+    <div class="outfits-container">
+        {% for outfit in user_outfits %}
+            <div class="outfit">
+                <div class="outfit-details">
+                    <h3>{{ outfit.name }}</h3>
+                    <img src="{{ outfit.top.image.url }}" alt="Top" class="outfit-image">
+                    <img src="{{ outfit.bottoms.image.url }}" alt="Bottoms" class="outfit-image">
+                    <img src="{{ outfit.footwear.image.url }}" alt="Footwear" class="outfit-image">
+                    {% if outfit.accessory %}
+                        <img src="{{ outfit.accessory.image.url }}" alt="Accessory" class="outfit-image">
+                    {% endif %}
+                    {% if outfit.outerwear %}
+                        <img src="{{ outfit.outerwear.image.url }}" alt="Outerwear" class="outfit-image">
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}    
+    </div>
+</div>
+
+<script>
+    function switchView() {
+        var clothesList = document.getElementById('clothesList');
+        var alternativeView = document.getElementById('alternativeView');
+        
+        if (clothesList.classList.contains('active')) {
+            clothesList.classList.remove('active');
+            alternativeView.classList.add('active');
+        } else {
+            clothesList.classList.add('active');
+            alternativeView.classList.remove('active');
+        }
+    }
+</script>
+
 {% endblock %}

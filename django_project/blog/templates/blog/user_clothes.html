@@ -1,7 +1,7 @@
 {% extends "blog/base.html" %}
 {% block content %}
 <style type="text/css">
-	.card {
+    .card {
         transition: transform 0.3s ease; /* Smooth transition on hover */
     }
 
@@ -11,7 +11,6 @@
 </style>
 
 <div class="container">
-    <h1 class="text-center">{{ username }}'s Closet</h1>
     {% if empty %}
         <p class="text-center">You haven't uploaded any clothes yet.</p>
     {% endif %}
