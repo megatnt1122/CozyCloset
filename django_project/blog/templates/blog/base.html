@@ -9,6 +9,7 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
     <link rel="stylesheet" type="text/css" href="{% static 'blog/main.css' %}">
 
 	{% if title %}
@@ -28,18 +29,20 @@
 		  <div class="collapse navbar-collapse" id="navbarToggle">
 			<div class="navbar-nav mr-auto">
 			  <a class="nav-item nav-link" href="{% url 'blog-home' %}">Home</a>
+			  <a class="nav-item nav-link" href="{% url 'post-create' %}">New Post</a>
 			  <a class="nav-item nav-link" href="{% url 'upload' %}">Upload</a>
 			  <a class="nav-item nav-link" href="{% url 'my-closets' %}">Closets</a>
 			  <a class="nav-item nav-link" href="{% url 'my-clothes' %}">Clothes</a>
-			  <a class="nav-item nav-link" href="{% url 'post-create' %}">New Post</a>
+			  <a class="nav-item nav-link" href="{% url 'create-outfit' %}">Outfit</a>
+			  <a class="nav-item nav-link" href="{% url 'core:home' %}">Market</a>
 			</div>
 			<!-- Navbar Right Side -->
 			<div class="navbar-nav">
 			{% if user.is_authenticated %}
-				<form method="post" action="{% url 'logout' %}">
-					{% csrf_token %}
-					<button type="submit">logout</button>
-				</form>
+				<form class="form-inline my-2 my-lg-0" method="GET" placeholder="Search Users.." action="{% url 'user-search' %}">
+            		<input class="form-control mr-sm-2" type="search" name="search">
+            		<button class="btn btn btn-outline-info my-2 my-sm-0" type="submit" style="margin-right: 10px;">Search</button>
+        		</form>
 			  <a class="nav-item nav-link" href="{% url 'profile' %}">Profile</a>
 			{% else %}
 			  <a class="nav-item nav-link" href="{% url 'login' %}">Login</a>
@@ -54,6 +57,7 @@
 	<main role="main" class="container">
 	  <div class="row">
 		<div class="col-md-12">
+			
 			{% if messages %}
 				{% for message in messages %}
 				<div clas="alert alert-{{ message.tags }}">

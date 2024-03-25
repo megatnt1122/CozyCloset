@@ -3,7 +3,6 @@
 <h1>{{ username }}'s Closet!</h1>
 <ul>
 	{% for item in userClothes %}
-<<<<<<< Updated upstream
 		<big style="font-size:40px; font-weight:bold; color:orange;">
 		{{ item.name }}
 		{{ item.category }}
@@ -12,7 +11,6 @@
 		<br>
 		<img src=" {{ item.image.url }}">
 		<a style="float:center; margin:20px; color: red;" href="/closet/{{item.name}}/delete/" class="btn btn-outline-info" >Delete</a>
-=======
 		<div class="container2">
 		<div class="image">
 			<img src=" {{ item.image.url }}">
@@ -27,7 +25,6 @@
 			</div>
 		<br>
 		<a style="float:center; margin:20px; color: red;" href="/closet/{{item.id}}/delete/" class="btn btn-outline-info" >Delete</a>
->>>>>>> Stashed changes
 		<br>
 		</big>
 	{% empty %}

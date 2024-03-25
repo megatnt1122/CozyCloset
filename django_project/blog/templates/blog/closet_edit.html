@@ -1,0 +1,16 @@
+{% extends "blog/base.html" %}
+{% block content %}
+<style>
+    /* Your CSS styles here */
+</style>
+
+<h1>Edit Closet</h1>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button type="submit">Save Changes</button>
+</form>
+
+{% endblock %}
