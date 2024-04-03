@@ -30,6 +30,10 @@ urlpatterns = [
     path('delete/<str:itemid>/<str:closetid>/', views.deleteItem, name="delete-citem"),
     path('clothes/', views.Clothes, name='my-clothes'),
     path('clothes/<str:itemid>/addtocloset/', views.AddToCloset, name='addto-closet'),
+<<<<<<< Updated upstream
+=======
+    path('clothes/<str:itemid>/addtopost/', PostCreateView.as_view(), name='addto-post'),
+>>>>>>> Stashed changes
     path('clothes/<str:itemid>/addtopost/', views.AddToPost, name='addto-post'),
     path('search/', SearchView.as_view(), name='user-search'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

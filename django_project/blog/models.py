@@ -38,12 +38,21 @@ class colors(models.Model):
 		return self.color
 
 class userClothes(models.Model):
+<<<<<<< Updated upstream
 	name = models.CharField(max_length=25, default='', verbose_name='*Name')
 	category = models.ForeignKey(clothingCategories, on_delete=models.CASCADE, verbose_name='*Category')
 	style = models.ForeignKey(clothingStyles, on_delete=models.CASCADE, verbose_name='*Style')
 	color = models.ForeignKey(colors, on_delete=models.CASCADE, verbose_name='*Color')
 	image = models.ImageField(default='', upload_to='clothing_photos')
 	bloguser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+=======
+    name = models.CharField(max_length=25, default='', verbose_name='Name')
+    category = models.ForeignKey(clothingCategories, on_delete=models.CASCADE, verbose_name='Category')
+    style = models.ForeignKey(clothingStyles, on_delete=models.CASCADE, verbose_name='Style')
+    color = models.ForeignKey(colors, on_delete=models.CASCADE, verbose_name='Color')
+    image = models.ImageField(default='', upload_to='clothing_photos')
+    bloguser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+>>>>>>> Stashed changes
 
 
 	def __str__(self):
