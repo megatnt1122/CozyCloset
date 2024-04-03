@@ -25,8 +25,8 @@ SECRET_KEY = 'django-insecure-iac%6(=9&#nj_f#(o$5p)c6qm@^ykds6i$x#+yfwrm9!_!qh7%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-#ALLOWED_HOSTS = ['4ch.mooo.com']
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['4ch.mooo.com']
+#ALLOWED_HOSTS = ['127.0.0.1']
 #from socket import gethostname, gethostbyname
 #ALLOWED_HOSTS = [ gethostname(), gethostbyname(gethostname()), ]
 
