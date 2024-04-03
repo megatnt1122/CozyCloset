@@ -46,8 +46,8 @@ class userClothes(models.Model):
     bloguser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
 
 
-	def __str__(self):
-		return self.name
+    def __str__(self):
+        return self.name
 
 	def save(self, *args, **kwargs):
 		self.name = self.name.title()
