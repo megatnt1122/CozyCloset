@@ -1,81 +1,102 @@
 {% extends "blog/base.html" %}
 {% block content %}
-<style>
-h1{
-	text-align: center;
-	margin-bottom: 25;
-}
+<style type="text/css">
+    .card {
+        transition: transform 0.3s ease; /* Smooth transition on hover */
+    }
 
-.button{
-	width: 300;
-	float: left;
-	background: none;
-	padding: 5px 15px;
-	text-align: center;
-	text-decoration: none;
-  	display: inline-block;
-  	font-size: 16px;
-  	margin: 10px;
-  	margin-left: 0px;
-  	transition-duration: 0.4s;
-  	cursor: pointer;
-}
-
-.delete{
-	color: black; 
-	border: 2px solid #f44336;
-}
-
-.delete:hover{
-	background-color: #f44336;
-	color: white;
-}
-
-.add{
-	color: black; 
-	border: 2px solid #008CBA;
-}
-
-.add:hover{
-	background-color: #008CBA;
-	color: white;
-}
+    .card:hover {
+        transform: translateY(-5px); /* Move card up slightly on hover */
+    }
 </style>
 
-{% if empty %}
-	<h1>{{ username }} Hasn't Uploaded Any Clothes Yet</h1>
-{% else %}
-	<h1>{{ username }}'s Clothes</h1>
-{% endif %}
+<div class="container">
+    {% if empty %}
+        <p class="text-center">You haven't uploaded any clothes yet.</p>
+    {% endif %}
+    
+    <!-- Filter Form -->
+    <form action="" method="GET" class="filter-form" onsubmit="saveFilterOptions()">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="category">Category:</label>
+                <select id="category" name="category" class="form-control">
+                    <option value="">All</option>
+                    {% for category in categories %}
+                        <option value="{{ category }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="style">Style:</label>
+                <select id="style" name="style" class="form-control">
+                    <option value="">All</option>
+                    {% for style in styles %}
+                        <option value="{{ style }}">{{ style }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="color">Color:</label>
+                <select id="color" name="color" class="form-control">
+                    <option value="">All</option>
+                    {% for color in colors %}
+                        <option value="{{ color }}">{{ color }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Filter</button>
+    </form>
 
+    <!-- Clothes List -->
+    <div class="row mt-4">
+        {% for item in filteredItems %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <img src="{{ item.image.url }}" class="card-img-top img-fluid" style="height: 350px;" alt="Clothing Image"> <!-- Set height to 350px -->
+                <div class="card-body">
+                    <h5 class="card-title" style="text-align: center;">{{ item.name }}</h5>
+                    <p class="card-text">Category: {{ item.category }}</p>
+                    <p class="card-text">Style: {{ item.style }}</p>
+                    <p class="card-text">Color: {{ item.color }}</p>
+                    <div class="btn-group" role="group">
+                        <a href="/delete/{{ item.id }}/" class="btn btn-danger">Delete</a>
+                        <a href="/clothes/{{ item.id }}/addtocloset/" class="btn btn-success">Add To Closet</a>
+                        <a href="/clothes/{{ item.id }}/addtopost/" class="btn btn-info">Share</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<script>
+    // Function to save filtering options to local storage
+    function saveFilterOptions() {
+        var category = document.getElementById('category').value;
+        var style = document.getElementById('style').value;
+        var color = document.getElementById('color').value;
 
-<ul>
-	{% for item in userClothes %}
-		<div class="container2">
-		<div class="image">
-			<img src=" {{ item.image.url }}">
-		</div>
-			<div class="text">
-				<big style="font-size:40px; font-weight:bold; color:#ce796b;">
-					{{ item.name }}
-				</big><br>
-		<pre class="tab">category:	{{ item.category }}</pre>
-		<pre class="tab4">style:	{{ item.style }}</pre>
-		<pre class="tab4">color:	{{ item.color }}</pre>
-			</div>
-		<br>
-		<a href="/delete/{{item.id}}/">
-			<button class="button delete">Delete</button>
-		</a>
-		<a href="/clothes/{{item.id}}/addtocloset/">
-			<button class="button add">Add To Closet</button>
-		</a>
-		<a href="/clothes/{{item.id}}/addtopost/">
-			<button class="button share">Share</button>
-		</a>
-		<br>
-		</div>
-		<hr>
-	{% endfor %}
-</ul>
+        localStorage.setItem('category', category);
+        localStorage.setItem('style', style);
+        localStorage.setItem('color', color);
+    }
+
+    // Function to retrieve filtering options from local storage and set them
+    function setFilterOptions() {
+        var category = localStorage.getItem('category');
+        var style = localStorage.getItem('style');
+        var color = localStorage.getItem('color');
+
+        document.getElementById('category').value = category;
+        document.getElementById('style').value = style;
+        document.getElementById('color').value = color;
+    }
+
+    // Set filtering options when the page loads
+    window.onload = function() {
+        setFilterOptions();
+    };
+</script>
 {% endblock %}

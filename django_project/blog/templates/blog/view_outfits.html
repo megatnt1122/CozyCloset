@@ -1,0 +1,85 @@
+{% extends "blog/base.html" %}
+{% block content %}
+<style type="text/css">
+    .outfit-gallery-container {
+        max-width: 1200px;
+        margin: 20px auto;
+    }
+
+    .outfits-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 30px;
+    }
+
+    .outfit {
+        border: 2px solid #007bff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .outfit:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .outfit-details {
+        text-align: center;
+        padding: 15px;
+        background-color: #f8f9fa;
+    }
+
+    .outfit-image {
+        width: 120px; /* Adjust based on your preference */
+        height: 160px; /* Adjust based on your preference */
+        object-fit: cover; /* Keeps the aspect ratio and fills the space */
+        margin: 5px;
+        border-radius: 8px;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #333;
+    }
+
+    .outfit h3 {
+        margin-bottom: 15px;
+        color: #007bff;
+    }
+
+    .no-outfits {
+        text-align: center;
+        margin-top: 50px;
+        font-size: 20px;
+        color: #6c757d;
+    }
+</style>
+
+    <div class="outfit-gallery-container">
+        <h2>Your Outfits</h2>
+        <div class="outfits-container">
+            {% for outfit in user_outfits %}
+                <div class="outfit">
+                    <div class="outfit-details">
+                        <h3>{{ outfit.name }}</h3>
+                        <img src="{{ outfit.top.image.url }}" alt="Top" class="outfit-image">
+                        <img src="{{ outfit.bottoms.image.url }}" alt="Bottoms" class="outfit-image">
+                        <img src="{{ outfit.footwear.image.url }}" alt="Footwear" class="outfit-image">
+                        {% if outfit.accessory %}
+                            <img src="{{ outfit.accessory.image.url }}" alt="Accessory" class="outfit-image">
+                        {% endif %}
+                        {% if outfit.outerwear %}
+                            <img src="{{ outfit.outerwear.image.url }}" alt="Outerwear" class="outfit-image">
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <p class="no-outfits">You have not created any outfits yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

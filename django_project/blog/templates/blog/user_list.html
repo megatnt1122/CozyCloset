@@ -16,7 +16,9 @@
                             <h2 class="mt-0">
                                 <a href="{% url 'user-closets' user.username %}" class="text-dark">{{ user.username }}</a>
                             </h2>
-                            <!-- Add more user details here if needed -->
+                            <!-- Button for sending a message -->
+                            <!-- Ensure you have a URL named 'send-message' that accepts a username as an argument -->
+                            <a href="{% url 'send-message' user.id %}" class="btn btn-primary">Message</a>
                         </div>
                     </div>
                 </div>

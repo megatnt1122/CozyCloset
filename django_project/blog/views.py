@@ -1,6 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect, reverse
-from django.http import HttpResponse, HttpResponseRedirect
+from collections import defaultdict
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic.edit import UpdateView
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.views.generic import (
@@ -48,26 +51,35 @@ class PostDetailView(DetailView):
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
-    fields = ['title', 'content']
-    user = Post.author
+    fields = ['title', 'content', 'image']
 
-    # dispatch is called when the class instance loads
     def dispatch(self, request, *args, **kwargs):
         self.item = kwargs.get('itemid', "")
-        print(self.item)
-
-
-        # needed to have an HttpResponse
         return super(PostCreateView, self).dispatch(request, *args, **kwargs)
 
+    def get_context_data(self,*args, **kwargs):
+        extra_context = super(PostCreateView, self).get_context_data(*args,**kwargs)
+        extra_context['userClothes'] = userClothes.objects.filter(bloguser=self.request.user)
+        if 'itemid' in self.kwargs:
+            shareditem = userClothes.objects.filter(id=self.kwargs['itemid']).first()
+            if shareditem:
+                extra_context['shareditem'] = shareditem
+        return extra_context
+
     def form_valid(self, form):
-        form.instance.author = self.request.user
-        return super().form_valid(form)
+        post = form.save(commit=False)  # Save the form to the 'post' but don't commit to the database yet
+        post.author = self.request.user
+        if 'itemid' in self.kwargs:  # Check if 'itemid' was passed to the view
+            shareditem = userClothes.objects.filter(id=self.kwargs['itemid']).first()
+            if shareditem:  # Check if a valid userClothes item was found
+                post.image = shareditem.image  # Assign the image from the shareditem to the post instance
+        post.save()  # Now save the post to the database
+        return HttpResponseRedirect(post.get_absolute_url())  # Redirect to the newly created post's detail view
 
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
-    fields = ['title', 'content']
+    fields = ['title', 'content', 'image']
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -103,12 +115,24 @@ class UploadView(LoginRequiredMixin, CreateView):
 # the view for creating a new closet
 class ClosetCreateView(LoginRequiredMixin, CreateView):
     model = Closet
-    fields = ['name']
+    fields = ['name', 'is_public']
 
     # links the current user to the closet being created
     def form_valid(self, form):
         form.instance.closetUser = self.request.user
         return super().form_valid(form)
+
+# The view for editing a closet
+class ClosetUpdateView(LoginRequiredMixin, UpdateView):
+    model = Closet
+    fields = ['name', 'is_public']
+    template_name = 'blog/closet_edit.html'
+
+    def get_success_url(self):
+        return reverse('my-closets')
+
+    def get_object(self):
+        return get_object_or_404(Closet, id=self.kwargs.get('closetid'), closetUser=self.request.user)
 
 
 def about(request):
@@ -119,6 +143,7 @@ def list(request):
 
 @login_required
 def myClosets(request):
+    # Render the initial page
     username = None
     if request.user.is_authenticated:
         username = request.user.username
@@ -128,15 +153,9 @@ def myClosets(request):
             'closets': Closet.objects.filter(closetUser=request.user),
             'title': 'Closets'
         }
-
         return render(request, 'blog/my_closets.html', context)
 
-#JUST IN CASE IT FAILS DELETE THE BELOW FUNCTION
 @login_required
-def deleteItem(request, itemid):
-    item = get_object_or_404(userClothes, id=itemid)
-    item.delete()
-
 def userClosets(request, username=None):
     if request.user.is_authenticated:
         user = get_object_or_404(User, username=username)
@@ -151,67 +170,151 @@ def userClosets(request, username=None):
 
 @login_required
 def openMyCloset(request, closetid=None):
-    username = None
+    username = request.user.username
     closet = get_object_or_404(Closet, id=closetid)
-    if request.user.is_authenticated:
-        username = request.user.username
-        if len(closetClothes.objects.filter(closet=closetid)) == 0:
-            empty = True
+    clothes_in_closet = closetClothes.objects.filter(closet=closet)
+    empty = not clothes_in_closet.exists()
+    
+    # Organize clothes by category without using defaultdict
+    categorized_clothes = {}
+    for closet_item in clothes_in_closet:
+        category = closet_item.clothing_item.category.category
+        if category not in categorized_clothes:
+            categorized_clothes[category] = [closet_item.clothing_item]
         else:
-            empty = False
-        clothes = []
-        for c in closetClothes.objects.filter(closet=closetid):
-            clothes.append(c.clothing_item)
-        context = {
-            'closet': closet,
-            'username': username,
-            'closetClothes': clothes,
-            'title': closet.name,
-            'empty': empty
-        }
+            categorized_clothes[category].append(closet_item.clothing_item)
 
-        return render(request, 'blog/open_my_closet.html', context)
+    outfits = [o.outfit for o in closetOutfits.objects.filter(closet=closet)]
+    
+    context = {
+        'closet': closet,
+        'username': username,
+        'categorized_clothes': categorized_clothes,
+        'title': closet.name,
+        'empty': empty,
+        'user_outfits': outfits
+    }
+
+    return render(request, 'blog/open_my_closet.html', context)
 
 @login_required
 def openUserCloset(request, username=None, closetname=None):
-    closet = get_object_or_404(Closet, name=closetname)
-    user = get_object_or_404(User, username=username)
-    if request.user.is_authenticated:
-        if len(closetClothes.objects.filter(closet=closet.id)) == 0:
-            empty = True
+    user = User.objects.get(username=username)
+    closet = get_object_or_404(Closet, name=closetname, closetUser=user)
+    clothes_in_closet = closetClothes.objects.filter(closet=closet)
+    empty = not clothes_in_closet.exists()
+    
+    # Organize clothes by category without using defaultdict
+    categorized_clothes = {}
+    for closet_item in clothes_in_closet:
+        category = closet_item.clothing_item.category.category
+        if category not in categorized_clothes:
+            categorized_clothes[category] = [closet_item.clothing_item]
         else:
-            empty = False
-        clothes = []
-        for c in closetClothes.objects.filter(closet=closet.id):
-            clothes.append(c.clothing_item)
-        context = {
-            'closet': closet,
-            'username': username,
-            'closetClothes': clothes,
-            'title': closet.name,
-            'empty': empty
-        }
+            categorized_clothes[category].append(closet_item.clothing_item)
 
-        return render(request, 'blog/open_user_closet.html', context)
+    outfits = [o.outfit for o in closetOutfits.objects.filter(closet=closet)]
+    
+    context = {
+        'closet': closet,
+        'username': username,
+        'categorized_clothes': categorized_clothes,
+        'title': closet.name,
+        'empty': empty,
+        'user_outfits': outfits
+    }
+
+    return render(request, 'blog/open_user_closet.html', context)
 
 @login_required
 def Clothes(request):
     username = None
     if request.user.is_authenticated:
         username = request.user.username
-        if len(userClothes.objects.filter(bloguser=request.user)) == 0:
-            empty = True
-        else:
-            empty = False
+        user_clothes = userClothes.objects.filter(bloguser=request.user)
+        categories = clothingCategories.objects.values_list('category', flat=True).distinct()
+        styles = clothingStyles.objects.values_list('style', flat=True).distinct()
+        color_list = colors.objects.values_list('color', flat=True).distinct()
+
+        # Filtering logic
+        category_filter = request.GET.get('category')
+        style_filter = request.GET.get('style')
+        color_filter = request.GET.get('color')
+
+        filtered_items = user_clothes
+        if category_filter:
+            filtered_items = filtered_items.filter(category__category=category_filter)
+        if style_filter:
+            filtered_items = filtered_items.filter(style__style=style_filter)
+        if color_filter:
+            filtered_items = filtered_items.filter(color__color=color_filter)
+
         context = {
             'user': request.user,
             'username': username,
-            'userClothes': userClothes.objects.filter(bloguser=request.user),
-            'title': 'All Clothes',
-            'empty': empty
+            'userClothes': user_clothes,
+            'categories': categories,
+            'styles': styles,
+            'colors': color_list,  # Changed variable name to color_list
+            'filteredItems': filtered_items,
+            'empty': len(user_clothes) == 0
         }
 
         return render(request, 'blog/user_clothes.html', context)
+
+@login_required
+def createOutfit(request, closetid=None):
+    # Ensure a valid closet is provided
+    if closetid is not None:
+        closet = get_object_or_404(Closet, id=closetid, closetUser=request.user)
+    else:
+        messages.error(request, "No valid closet specified.")
+        return redirect('some-default-url')  # Redirect to a default URL
+
+    if request.method == 'POST':
+        # Extract item IDs from POST data
+        top_id = request.POST.get('top')
+        bottoms_id = request.POST.get('bottoms')
+        footwear_id = request.POST.get('footwear')
+        accessory_id = request.POST.get('accessory')  # These are optional, so they might be empty strings.
+        outerwear_id = request.POST.get('outerwear')
+
+        # Attempt to retrieve the corresponding userClothes instances
+        try:
+            top = userClothes.objects.get(id=top_id, bloguser=request.user, closetclothes__closet=closet) if top_id else None
+            bottoms = userClothes.objects.get(id=bottoms_id, bloguser=request.user, closetclothes__closet=closet) if bottoms_id else None
+            footwear = userClothes.objects.get(id=footwear_id, bloguser=request.user, closetclothes__closet=closet) if footwear_id else None
+            accessory = userClothes.objects.get(id=accessory_id, bloguser=request.user, closetclothes__closet=closet) if accessory_id else None
+            outerwear = userClothes.objects.get(id=outerwear_id, bloguser=request.user, closetclothes__closet=closet) if outerwear_id else None
+
+            if not all([top, bottoms, footwear]):  # Make sure the required items are selected
+                raise ValueError("Top, bottoms, and footwear are required to create an outfit.")
+
+            outfit = Outfit(user=request.user, top=top, bottoms=bottoms, footwear=footwear, accessory=accessory, outerwear=outerwear)
+            outfit.save()
+            closetOutfit = closetOutfits(closet=closet, outfit=outfit, user=request.user)
+            closetOutfit.save()
+
+            messages.success(request, "Outfit created successfully!")
+            return redirect(reverse('open-closet', kwargs={'closetid': closetid}))
+
+        except userClothes.DoesNotExist:
+            messages.error(request, "One or more selected items were not found.")
+        except ValueError as e:
+            messages.error(request, str(e))
+
+    # If not POST method or if there was an error, re-display the form.
+    categories = {
+        'top': userClothes.objects.filter(category__category='Top', bloguser=request.user, closetclothes__closet=closet),
+        'bottoms': userClothes.objects.filter(category__category='Bottoms', bloguser=request.user, closetclothes__closet=closet),
+        'footwear': userClothes.objects.filter(category__category='Footwear', bloguser=request.user, closetclothes__closet=closet),
+        'accessories': userClothes.objects.filter(category__category='Accessory', bloguser=request.user, closetclothes__closet=closet),
+        'outerwear': userClothes.objects.filter(category__category='Outerwear', bloguser=request.user, closetclothes__closet=closet)
+    }
+
+    return render(request, 'blog/create_outfit.html', {'categories': categories, 'closet': closet})
+
+
 
 @login_required
 def AddToCloset(request, itemid=None):
@@ -275,6 +378,14 @@ def deleteCloset(request, closetid=None):
     closet.delete()
     return redirect(reverse('my-closets'))
 
+@login_required
+def deleteOutfit(request, closetid=None, outfitid=None):
+    coutfit = get_object_or_404(closetOutfits, closet=closetid, outfit=outfitid)
+    outfit = coutfit.outfit
+    coutfit.delete()
+    outfit.delete()
+    return redirect(reverse('open-closet', kwargs={'closetid': closetid}))
+
 class SearchView(ListView):
     model = User
     template_name = "blog/user_list.html"
@@ -286,3 +397,65 @@ class SearchView(ListView):
         if search_query:
             queryset = queryset.filter(username__icontains=search_query)
         return queryset
+
+@login_required
+def view_outfits(request):
+    user_outfits = Outfit.objects.filter(user=request.user)  # Get all outfits for the logged-in user
+    return render(request, 'blog/view_outfits.html', {'user_outfits': user_outfits})
+
+@login_required
+def new_message(request, user_pk):
+    recipient = get_object_or_404(User, pk=user_pk)
+    if recipient == request.user:
+        return redirect('your-redirect-url')  # Redirect to prevent messaging oneself.
+
+    # Check if there is an existing conversation between the users
+    existing_convos = Convo.objects.filter(members__in=[request.user, recipient]).distinct()
+    if existing_convos.exists():
+        return redirect('view-message', pk=existing_convos.first().id)  # Use the appropriate path name
+
+    if request.method == 'POST':
+        form = DirectMessagingForm(request.POST)
+        if form.is_valid():
+            convo = Convo.objects.create()  # No need to attach user directly to Convo
+            convo.members.add(request.user, recipient)
+            convo_message = form.save(commit=False)
+            convo_message.conversing = convo
+            convo_message.created_by = request.user
+            convo_message.save()
+            return redirect('view-message', pk=convo.id)  # Ensure this redirect is correct
+    else:
+        form = DirectMessagingForm()
+
+    return render(request, 'blog/new.html', {'form': form, 'recipient': recipient})  # Adjust template path if needed
+
+@login_required
+def dm(request):
+     convos = Convo.objects.filter(members__in=[request.user.id])
+
+     return render(request, 'blog/dm.html',{
+         'convos': convos,
+     })
+
+@login_required
+def detailM(request, pk):
+    convo = Convo.objects.filter(members__in=[request.user.id]).get(pk=pk)
+
+    if request.method == 'POST':
+        form = DirectMessagingForm(request.POST)
+        if form.is_valid():
+            convo_message = form.save(commit=False)
+            convo_message.conversing = convo
+            convo_message.created_by = request.user
+            convo_message.save()
+
+            convo.save()
+            return redirect('view-message',pk=pk)
+    else:
+        form = DirectMessagingForm()
+        
+
+    return render(request, 'blog/detailM.html', {
+        'convo': convo,
+        'form': form
+    })
