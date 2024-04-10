@@ -410,7 +410,7 @@ def new_message(request, user_pk):
         return redirect('your-redirect-url')  # Redirect to prevent messaging oneself.
 
     # Check if there is an existing conversation between the users
-    existing_convos = Convo.objects.filter(members__in=[request.user, recipient]).distinct()
+    existing_convos = Convo.objects.filter(members=request.user).filter(members=recipient).distinct()
     if existing_convos.exists():
         return redirect('view-message', pk=existing_convos.first().id)  # Use the appropriate path name
 
