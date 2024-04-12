@@ -38,7 +38,9 @@ urlpatterns = [
     path('dm/', views.dm, name='view-messages'),
     path('dm/<int:pk>', views.detailM, name='view-message'),
     path('dm/new/<int:user_pk>', views.new_message, name='send-message'),
-    path('comment/<int:pk>', PostCreateView.as_view(), name='comment-post-create'),
+    path('comment/', views.commentlist, name='view-comments'),
+    path('comment/<int:pk>', views.commentmaker, name='view-comment'),
+    path('comment/new/<int:user_pk>', views.new_comment, name='send-comment')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

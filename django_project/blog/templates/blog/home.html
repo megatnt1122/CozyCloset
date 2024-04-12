@@ -26,7 +26,10 @@
 			 as an argument -->
 			 <br>
 			 <br>
-			<h3><a href="{% url 'comment-post-create' post.id %}" class="btn btn-primary">Comment</a>
+			<h3><a href="{% url 'send-comment' post.author.id %}" class="btn btn-primary">Comment</a>
+			{{ post }}
+			{{ post.author }}
+			{{ post.author.id }}
 		  </div>
 		</article>
 	{% endfor %}

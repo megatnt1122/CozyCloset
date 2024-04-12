@@ -127,9 +127,20 @@ class ConvoMessage(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User,related_name='created_message', on_delete=models.CASCADE, default=1)
-    
-'''class Comment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+
+class CommentSection(models.Model):
+    commentuser = models.ForeignKey(User, related_name='commentUser', on_delete=models.CASCADE, default=1)
+    commentmembers = models.ManyToManyField(User, related_name='commentsection')
+    created_when = models.DateTimeField(auto_now_add=True)
+    modified_when = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('-modified_when',)
+
+
+class Comment(models.Model):
+    commentions = models.ForeignKey(CommentSection, related_name='commentMessage', on_delete=models.CASCADE, default=1)
     content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)'''
+    created_when = models.DateTimeField(auto_now_add=True)
+    created_when = models.ForeignKey(User,related_name='created_message_when', on_delete=models.CASCADE, default=1)
+    

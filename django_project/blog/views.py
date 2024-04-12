@@ -65,7 +65,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
             if shareditem:
                 extra_context['shareditem'] = shareditem
         return extra_context
-
+    
     def form_valid(self, form):
         post = form.save(commit=False)  # Save the form to the 'post' but don't commit to the database yet
         post.author = self.request.user
@@ -387,6 +387,8 @@ def view_outfits(request):
 @login_required
 def new_message(request, user_pk):
     recipient = get_object_or_404(User, pk=user_pk)
+    print("receiver is: ", recipient)
+    print("user is: ", request.user)
     if recipient == request.user:
         return redirect('your-redirect-url')  # Redirect to prevent messaging oneself.
 
@@ -440,21 +442,66 @@ def detailM(request, pk):
         'convo': convo,
         'form': form
     })
-    
-'''def post_commentview(request, pk):
-   cf = CommentForm(None)
-   
-   if request.method == 'POST':
-       cf = CommentForm(request.POST)
-       if cf.is_valid():
-           content = request.POST.get('content')
-           comment = Comment.objects.create(post = post, user = request.user, content = content)
-           comment.save()
-           return redirect('post-comment',pk=pk)
-       else:
-           cf = CommentForm()
-           
-   context ={
-     'comment_form':cf,
-     }
-   return render(request, 'blog/post_comment.html', context)'''
+
+@login_required
+def new_comment(request, user_pk):
+    recip = get_object_or_404(User, pk=user_pk)
+    receiver = get_object_or_404(User, pk=user_pk)
+    print("receiver is: ", receiver)
+    print("recip is: ", recip)
+    print("user is: ", request.user)
+    print(car)
+    if receiver == request.user:
+        print("WHY")
+        return redirect('your-redirect-url')  # Redirect to prevent messaging oneself.
+
+    # Check if there is an existing comment section between the users
+    existing_commentsection = CommentSection.objects.filter(members__in=[request.user, receiver]).distinct()
+    if existing_commentsection.exists():
+        return redirect('view-comment', pk=existing_commentsection.first().id)  # Use the appropriate path name
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            commention = CommentSection.objects.create()  # No need to attach user directly to Convo
+            com.commentmembers.add(request.user, receiver)
+            com_message = form.save(commit=False)
+            com_message.conversing = commention
+            com_message.created_by = request.user
+            con_message.save()
+            return redirect('view-comment', pk=commention.id)  # Ensure this redirect is correct
+    else:
+        form = CommentForm()
+
+    return render(request, 'blog/new_comment.html', {'form': form, 'receiver': receiver})  # Adjust template path if needed
+
+@login_required
+def commentlist(request):
+     commention = CommentSection.objects.filter(members__in=[request.user.id])
+
+     return render(request, 'blog/comment.html',{
+         'commention': commention,
+     })
+
+@login_required
+def commentmaker(request, pk):
+    commention = CommentSection.objects.filter(members__in=[request.user.id]).get(pk=pk)
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            com_message = form.save(commit=False)
+            com_message.conversing = commention
+            com_message.created_when = request.user
+            com_message.save()
+
+            commention.save()
+            return redirect('view-comment',pk=pk)
+    else:
+        form = CommentForm()
+        
+
+    return render(request, 'blog/commentmaker.html', {
+        'commention': commention,
+        'form': form
+    })

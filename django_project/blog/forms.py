@@ -26,6 +26,16 @@ class DirectMessagingForm(forms.ModelForm):
             })
         }
         
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content',]
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'w-full py-4 px-6 rounded-xl border'
+            })
+        }
+        
 '''class CommentForm(forms.ModelForm):
     content = forms.CharField(label ="", widget = forms.Textarea(
     attrs ={
