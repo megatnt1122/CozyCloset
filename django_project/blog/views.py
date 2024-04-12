@@ -415,7 +415,7 @@ def view_outfits(request):
 def new_message(request, user_pk):
     recipient = get_object_or_404(User, pk=user_pk)
     if recipient == request.user:
-        return redirect('your-redirect-url')  # Redirect to prevent messaging oneself.
+        return redirect('view-messages')  # Redirect to prevent messaging oneself.
 
     # Check if there is an existing conversation between the users
     existing_convos = Convo.objects.filter(members=request.user).filter(members=recipient).distinct()
