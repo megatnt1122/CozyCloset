@@ -95,7 +95,16 @@
         display: block;
     }
 
-
+    /* Message container */
+    .message-container {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        width: 100%;
+        max-width: 500px;
+    }
 </style>
 
 <div id="clothesList" class="content active">
@@ -113,7 +122,7 @@
     <div class="message-container">
         {% for message in messages %}
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                Outfit Created Succesfully!
+                Outfit Created Successfully!
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -149,18 +158,48 @@
 <!-- Alternative View (View 2) -->
 <div id="alternativeView" class="content">
 <style type="text/css">
-    /* Your existing styles */
+    /* Header and overall layout */
+    .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Allow items to wrap to next line */
+}
+
+    .header-title {
+        text-align: center;
+    }
+
     .outfit-gallery-container {
         max-width: 1200px;
         margin: 20px auto;
     }
 
     .outfits-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 30px;
-    }
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    align-items: flex-start; /* This will align the items at the top */
+}
+
+.plus {
+    width: 100%; /* Take the full width */
+    display: flex;
+    justify-content: center; /* Center plus sign horizontally */
+    margin-top: 10px; /* Give some space between the button and the plus sign */
+}
+
+.create-outfit-link {
+    display: block; /* Make the link fill the container for centering the image */
+}
+
+.create-outfit-icon {
+    width: 100px; /* Set a fixed width for the plus icon */
+    height: 100px; /* Set a fixed height for the plus icon */
+    object-fit: contain; /* Ensure the image is fully visible */
+}
 
     .outfit {
         border: 2px solid #007bff;
@@ -203,6 +242,15 @@
         justify-content: center; /* Center button group if needed */
     }
 
+    .fade {
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+
+    .show {
+        opacity: 1;
+    }  
+
 </style>
 
 <div class="header">
@@ -213,20 +261,12 @@
         {% endif %}
     </div>
     <button type="button" class="switch-view-btn" onclick="switchView()">Switch To Item View</button>
-</div>
-
-{% if messages %}
-    <div class="message-container">
-        {% for message in messages %}
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                Outfit Created Succesfully!
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        {% endfor %}
+    <div class="plus">
+        <a class="create-outfit-link" href="/myclosets/{{ closet.id }}/createoutfit/">
+            <img src="/media/plus.png" alt="Create New Outfit" class="create-outfit-icon" style="width: 100px; height: 100px;">
+        </a>
     </div>
-{% endif %}
+</div>
 
 <div class="outfit-gallery-container">
     <div class="outfits-container">
@@ -244,16 +284,11 @@
                         <img src="{{ outfit.outerwear.image.url }}" alt="Outerwear" class="outfit-image">
                     {% endif %}
                     <div class="btn-group" role="group">
-                        <a href="/myclosets/{{ closet.id }}/{{ outfit.id }}/deleteoutfit/" class="btn btn-danger">Remove</a> <!-- Make sure to replace `outfit.id` with the correct id if necessary -->
+                        <a href="javascript:void(0);" class="btn btn-danger" onclick="deleteOutfit(this)" data-outfit-id="{{ outfit.id }}">Remove</a>
                     </div>
                 </div>
             </div>
-        {% endfor %}
-        <div class="plus">
-            <a class="create-outfit-link" href="/myclosets/{{ closet.id }}/createoutfit/">
-                <img src="/media/plus.png" alt="Create New Outfit" class="create-outfit-icon" style="width: 100px; height: 100px;">
-            </a>
-        </div>    
+        {% endfor %}   
     </div>
 </div>
 
@@ -266,16 +301,110 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-    setTimeout(function() {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(alert => {
-            alert.style.opacity = '0';
-            setTimeout(() => alert.remove(), 600);
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 600);
+            });
+        }, 5000); // Alerts will fade out after 5 seconds
+    });
+
+    function deleteOutfit(element) {
+        const outfitId = element.getAttribute('data-outfit-id');
+        const url = `/myclosets/${outfitId}/deleteoutfit/`; // Adjust the URL to match your routing
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Perform the AJAX request
+                fetch(url, {
+                    method: 'DELETE', // Use the DELETE HTTP method for RESTful delete
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'), // Ensure you include the CSRF token
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Remove the outfit element from the DOM
+                    element.closest('.outfit').remove();
+                    
+                    // Insert the success alert into the message container
+                    displayAlert('Outfit deleted successfully.');
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    // If there's an error, display an error alert
+                    displayAlert('There was an issue deleting your outfit.', 'danger');
+                });
+            }
         });
-    }, 5000); // Alerts will fade out after 5 seconds
-});
+    }
 
+    function displayAlert(message, type = 'success') {
+        const alertHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `;
+        // Select the message container
+        const messageContainer = document.querySelector('.message-container') || createMessageContainer();
+        // Insert the alert HTML
+        messageContainer.innerHTML = alertHTML + messageContainer.innerHTML;
 
+        // Make the message container visible
+        messageContainer.style.display = 'block';
+
+        // Automatically remove the alert after a delay
+        setTimeout(() => {
+            const alert = messageContainer.querySelector('.alert');
+            if (alert) {
+                alert.style.opacity = '0';
+                alert.addEventListener('transitionend', () => {
+                    alert.remove();
+                });
+            }
+        }, 5000);
+    }
+
+    function createMessageContainer() {
+        const container = document.createElement('div');
+        container.className = 'message-container';
+        document.body.appendChild(container); // Append to body
+        return container;
+    }
+
+    // Function to get the CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 </script>
 
 {% endblock %}
