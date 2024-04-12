@@ -21,6 +21,12 @@
 			{% if post.image.url != undefined %}
 				<img class="image" src="{{ post.image.url }}" style="max-width:350px; max-height:350px;">
 			{% endif %}
+			<!-- Button for replying -->
+			<!-- Ensure you have a URL named 'reply-message' that accepts a other author post and your as 
+			 as an argument -->
+			 <br>
+			 <br>
+			<h3><a href="{% url 'comment-post-create' post.id %}" class="btn btn-primary">Comment</a>
 		  </div>
 		</article>
 	{% endfor %}

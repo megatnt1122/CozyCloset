@@ -337,25 +337,6 @@ def AddToCloset(request, itemid=None):
     }
 
     return render(request, 'blog/AddToCloset.html', context)
-    
-@login_required
-def AddToPost(request, itemid=None):
-    item = userClothes.objects.get(id=itemid)
-
-    if request.POST.get("save"):
-        for c in Closet.objects.filter(closetUser=request.user):
-            if request.POST.get(str(c.id)) == "clicked":
-                adding = closetClothes(closet=c, clothing_item=item, user=request.user) #Adding to Post
-                adding.save()
-    
-    Closets = Closet.objects.filter(closetUser=request.user)
-    closets = []
-    context = {
-        'user': request.user,
-        'closets': closets, #Make need to change
-    }
-
-    return render(request, 'blog/AddToPost.html', context)
 
 @login_required
 def deleteItem(request, itemid=None, closetid=None):
@@ -459,3 +440,21 @@ def detailM(request, pk):
         'convo': convo,
         'form': form
     })
+    
+'''def post_commentview(request, pk):
+   cf = CommentForm(None)
+   
+   if request.method == 'POST':
+       cf = CommentForm(request.POST)
+       if cf.is_valid():
+           content = request.POST.get('content')
+           comment = Comment.objects.create(post = post, user = request.user, content = content)
+           comment.save()
+           return redirect('post-comment',pk=pk)
+       else:
+           cf = CommentForm()
+           
+   context ={
+     'comment_form':cf,
+     }
+   return render(request, 'blog/post_comment.html', context)'''

@@ -33,12 +33,12 @@ urlpatterns = [
     path('delete/<str:itemid>/<str:closetid>/', views.deleteItem, name="delete-citem"),
     path('clothes/', views.Clothes, name='my-clothes'),
     path('clothes/<str:itemid>/addtopost/', PostCreateView.as_view(), name='addto-post'),
-    path('clothes/<str:itemid>/addtopost/', views.AddToPost, name='addto-post'),
     path('view-outfits/', views.view_outfits, name='view-outfits'),
     path('search/', SearchView.as_view(), name='user-search'),
     path('dm/', views.dm, name='view-messages'),
     path('dm/<int:pk>', views.detailM, name='view-message'),
     path('dm/new/<int:user_pk>', views.new_message, name='send-message'),
+    path('comment/<int:pk>', PostCreateView.as_view(), name='comment-post-create'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
