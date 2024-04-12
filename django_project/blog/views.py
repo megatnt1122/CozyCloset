@@ -1,11 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect, reverse
+from django.urls import reverse_lazy
 from collections import defaultdict
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic.edit import UpdateView
 from django.contrib.auth.models import User
+from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import (
     ListView,
     DetailView,
@@ -102,15 +105,20 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
             return True
         return False
 
+
 # the view for the upload page
 class UploadView(LoginRequiredMixin, CreateView):
     model = userClothes
     fields = ['name','category','style','color','image']
+    template_name = "blog/userclothes_form.html"
+
 
     # links the current user to the item being uploaded
     def form_valid(self, form):
         form.instance.bloguser = self.request.user
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        messages.success(self.request, 'Item Added Successfully!')
+        return response
 
 # the view for creating a new closet
 class ClosetCreateView(LoginRequiredMixin, CreateView):
@@ -295,7 +303,7 @@ def createOutfit(request, closetid=None):
             closetOutfit = closetOutfits(closet=closet, outfit=outfit, user=request.user)
             closetOutfit.save()
 
-            messages.success(request, "Outfit created successfully!")
+            messages.success(request, ' ')
             return redirect(reverse('open-closet', kwargs={'closetid': closetid}))
 
         except userClothes.DoesNotExist:

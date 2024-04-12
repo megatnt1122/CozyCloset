@@ -1,21 +1,120 @@
 {% extends 'blog/base.html' %}
-
 {% block title %} Upload {% endblock %}
-
 {% block content %}
-<h1 style="margin-bottom: -5;">Add Your Clothes!</h1>
-<h1 style="margin-bottom: 15;"></h1>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-
-<style type="text/css">
-	body{
-		background-color: #ecc8af;
-	}
+<div class="upload-container">
+	{% if messages %}
+    <div class="message-container">
+        {% for message in messages %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+	{% endif %}
+    <h1 class="upload-header">Add An Item To Your Closet!</h1>
+    <form method="post" action="/upload/" enctype="multipart/form-data" class="upload-form">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-field">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <p class="help-text">{{ field.help_text }}</p>
+                {% endif %}
+                {% for error in field.errors %}
+                <p class="form-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="upload-button">Upload</button>
+    </form>
+</div>
+<style>
+    body {
+        background-color: #ecc8af;
+        font-family: 'Arial', sans-serif;
+    }
+    
+    .upload-container {
+        max-width: 600px;
+        margin: 80px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .upload-header {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .upload-form {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .form-field {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+    
+    input[type='text'], input[type='file'], select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    
+    .help-text {
+        font-size: 12px;
+        color: #666;
+    }
+    
+    .form-error {
+        color: #d9534f;
+        font-size: 13px;
+    }
+    
+    .upload-button {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        background-color: #5cb85c;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    
+    .upload-button:hover {
+        background-color: #4cae4c;
+    }
 </style>
 
-<form method="post" action="/upload/" enctype="multipart/form-data">
-	{% csrf_token %}
-	{{form.as_p}}
-	<button type="submit", name="Upload">Upload</button>
-</form>
+<script type="text/javascript">
+	document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 600);
+        });
+    }, 5000); // Alerts will fade out after 5 seconds
+});
+</script>
 {% endblock %}

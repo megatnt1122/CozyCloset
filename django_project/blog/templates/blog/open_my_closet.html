@@ -1,6 +1,10 @@
 {% extends "blog/base.html" %}
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style type="text/css">
+    #django-messages {
+        display: none;  // Hide default message display area
+    }
     /* Header and overall layout */
     .header {
         display: flex;
@@ -90,6 +94,8 @@
     .content.active {
         display: block;
     }
+
+
 </style>
 
 <div id="clothesList" class="content active">
@@ -103,6 +109,18 @@
         <button type="button" class="switch-view-btn" onclick="switchView()">Switch To Outfit View</button>
     </div>
 
+{% if messages %}
+    <div class="message-container">
+        {% for message in messages %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                Outfit Created Succesfully!
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
     <!-- Clothes List -->
     {% if not empty %}
         {% for category, items in categorized_clothes.items %}
@@ -185,7 +203,6 @@
         justify-content: center; /* Center button group if needed */
     }
 
-    /* Your other styles remain unchanged */
 </style>
 
 <div class="header">
@@ -197,6 +214,19 @@
     </div>
     <button type="button" class="switch-view-btn" onclick="switchView()">Switch To Item View</button>
 </div>
+
+{% if messages %}
+    <div class="message-container">
+        {% for message in messages %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                Outfit Created Succesfully!
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
 
 <div class="outfit-gallery-container">
     <div class="outfits-container">
@@ -231,15 +261,21 @@
     function switchView() {
         var clothesList = document.getElementById('clothesList');
         var alternativeView = document.getElementById('alternativeView');
-        
-        if (clothesList.classList.contains('active')) {
-            clothesList.classList.remove('active');
-            alternativeView.classList.add('active');
-        } else {
-            clothesList.classList.add('active');
-            alternativeView.classList.remove('active');
-        }
+        clothesList.classList.toggle('active');
+        alternativeView.classList.toggle('active');
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 600);
+        });
+    }, 5000); // Alerts will fade out after 5 seconds
+});
+
+
 </script>
 
 {% endblock %}
