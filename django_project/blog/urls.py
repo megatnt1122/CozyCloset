@@ -40,6 +40,7 @@ urlpatterns = [
     path('dm/<int:pk>', views.detailM, name='view-message'),
     path('dm/new/<int:user_pk>', views.new_message, name='send-message'),
     path('like/<int:pk>', LikeView, name="like_post"),
+    path('post/<int:pk>/comment/', AddCommentView.as_view(), name='add_comment'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
