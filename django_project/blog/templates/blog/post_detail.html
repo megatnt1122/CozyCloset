@@ -23,9 +23,20 @@
 				  <form action="{% url 'like_post' post.pk %}"
 		  method="POST">
 			{% csrf_token %}
-			<button type="submit", name="post_id" value="{{ post.id }} ">
-			<img src="https://cdn-icons-png.flaticon.com/256/81/81250.png" alt="Like button" style="width:10px; height:10px;">
-			</button>
+			{% if user.is_authenticated %}
+				{% if liked %}
+					<button type="submit", name="post_id" value="{{ post.id }}">
+					<img src="https://cdn-icons-png.flaticon.com/256/81/81250.png" alt="Unlike button" style="width:10px; height:10px;">
+					</button>
+				{% else %}
+					<button type="submit", name="post_id" value="{{ post.id }}">
+					<img src="https://cdn-icons-png.flaticon.com/512/126/126473.png " alt="Like button" style="width:10px; height:10px;">
+					</button>
+				{% endif %}
+			{% else %}
+				<small><a href="{% url 'login' %}">Login</a>
+				Login to like</small>
+			{% endif %}
 			{{ total_likes }} Likes
 		  </form>
 	  </div>
