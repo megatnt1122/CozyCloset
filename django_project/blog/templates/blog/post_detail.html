@@ -12,12 +12,22 @@
 		  	<a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'post-delete' object.id %}">Delete</a>
 		  </div>
 		  {% endif %}
+		  
 		</div>
 		<h2 class="article-title">{{ object.title }}</h2>
 		<p class="article-content">{{ object.content }}</p>
+		
 		{% if object.image.url != undefined %}
 		<img class="image" src="{{ object.image.url }}">
 		{% endif %}
+				  <form action="{% url 'like_post' post.pk %}"
+		  method="POST">
+			{% csrf_token %}
+			<button type="submit", name="post_id" value="{{ post.id }} ">
+			<img src="https://cdn-icons-png.flaticon.com/256/81/81250.png" alt="Like button" style="width:10px; height:10px;">
+			</button>
+			{{ total_likes }} Likes
+		  </form>
 	  </div>
 	</article>
 {% endblock content %}

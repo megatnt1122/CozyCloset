@@ -39,6 +39,7 @@ urlpatterns = [
     path('dm/', views.dm, name='view-messages'),
     path('dm/<int:pk>', views.detailM, name='view-message'),
     path('dm/new/<int:user_pk>', views.new_message, name='send-message'),
+    path('like/<int:pk>', LikeView, name="like_post"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

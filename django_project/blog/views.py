@@ -18,6 +18,10 @@ from .forms import *
 from .models import *
 from django.db.models import Q
 
+def LikeView(request, pk):
+    post = get_object_or_404(Post, id=request.POST.get('post_id'))
+    post.likes.add(request.user)
+    return HttpResponseRedirect(reverse('post-detail', args=[str(pk)])) #ThIS IS PROBABLY WRONG
 
 def home(request):
     context = {
@@ -47,6 +51,13 @@ class UserPostListView(ListView):
 
 class PostDetailView(DetailView):
     model = Post
+    
+    def get_context_data(self, *args, **kwargs):
+        context = super(PostDetailView, self).get_context_data(*args,**kwargs)
+        stuff = get_object_or_404(Post, id=self.kwargs['pk'])
+        total_likes = stuff.total_likes()
+        context["total_likes"] = total_likes
+        return context
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
