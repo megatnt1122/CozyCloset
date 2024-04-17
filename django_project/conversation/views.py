@@ -4,7 +4,7 @@ from .models import Conversation
 from .forms import ConversationMessageForm
 from django.contrib.auth.decorators import login_required
 
-#@login_required
+@login_required
 def new_conversation(request, item_pk):
     item = get_object_or_404(Item, pk=item_pk)
 
@@ -32,14 +32,14 @@ def new_conversation(request, item_pk):
 
             return redirect('item:detail', pk=item_pk)
         
-        else:
-            form = ConversationMessageForm()
+    else:
+        form = ConversationMessageForm()
 
-        return render(request, 'conversation/new.html', {
-            'form': form
-        })
+    return render(request, 'conversation/new.html', {
+        'form': form
+    })
     
-#@login_required
+@login_required
 def inbox(request):
     conversations = Conversation.objects.filter(members__in=[request.user.id])
 
@@ -47,7 +47,7 @@ def inbox(request):
         'conversations': conversations
     })
 
-#@login_required
+@login_required
 def detail(request, pk):
     conversation = Conversation.objects.filter(members__in=[request.user.id]).get(pk=pk)
 
@@ -58,14 +58,15 @@ def detail(request, pk):
             conversation_message = form.save(commit=False)
             conversation_message.conversation = conversation
             conversation_message.created_by = request.user
-
+            conversation_message.save()
+            
             conversation.save()
 
             return redirect('conversation:detail', pk=pk)
-        else:
-            form = ConversationMessageForm()
+    else:
+        form = ConversationMessageForm()
 
-    render(request, 'conversation/detail.html', {
+    return render(request, 'conversation/detail.html', {
         'conversation': conversation,
         'form': form
     })
