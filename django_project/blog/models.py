@@ -10,6 +10,10 @@ class Post(models.Model):
     date_posted = models.DateTimeField(default=timezone.now)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(default='', null=True, blank=True, upload_to='post_photos')
+    likes = models.ManyToManyField(User, related_name='blog_posts')
+    
+    def total_likes(self):
+        return self.likes.count()
     
     def __str__(self):
         return self.title
@@ -127,3 +131,17 @@ class ConvoMessage(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User,related_name='created_message', on_delete=models.CASCADE, default=1)
+
+class Comment(models.Model):
+    user = models.ForeignKey(User, related_name='commentUser', on_delete=models.CASCADE, default=1)
+    post = models.ForeignKey(Post,related_name="comments", on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    body = models.TextField()
+    date_added = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return '%s - %s' % (self.post.title, self.name)
+
+class Follows(models.Model):
+    user = models.ForeignKey(User, related_name='user', on_delete=models.CASCADE, default=1)
+    follows = models.ForeignKey(User, related_name='follows', on_delete=models.CASCADE, default=1)

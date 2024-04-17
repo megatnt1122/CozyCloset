@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic.edit import UpdateView
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse_lazy
 from django.views.generic import (
     ListView,
     DetailView,
@@ -18,6 +19,17 @@ from .forms import *
 from .models import *
 from django.db.models import Q
 
+def LikeView(request, pk):
+    post = get_object_or_404(Post, id=request.POST.get('post_id'))
+    liked = False
+    if post.likes.filter(id=request.user.id).exists():
+        post.likes.remove(request.user)
+        liked = False
+    else:
+        post.likes.add(request.user)
+        liked = True
+    
+    return HttpResponseRedirect(reverse('post-detail', args=[str(pk)])) #ThIS IS PROBABLY WRONG
 
 def home(request):
     context = {
@@ -47,7 +59,32 @@ class UserPostListView(ListView):
 
 class PostDetailView(DetailView):
     model = Post
+    
+    def get_context_data(self, *args, **kwargs):
+        context = super(PostDetailView, self).get_context_data(*args,**kwargs)
+        
+        
+        stuff = get_object_or_404(Post, id=self.kwargs['pk'])
+        total_likes = stuff.total_likes()
+        
+        liked = False
+        if stuff.likes.filter(id=self.request.user.id).exists():
+            liked = True
 
+        context["total_likes"] = total_likes
+        context["liked"] = liked
+        return context
+
+class AddCommentView(CreateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/add_comment.html'
+    #fields = '__all__'
+    def form_valid(self, form):
+        form.instance.post_id = self.kwargs['pk']
+        form.instance.name = self.request.user
+        return super().form_valid(form)
+    success_url = reverse_lazy('blog-home')
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
@@ -407,7 +444,7 @@ def view_outfits(request):
 def new_message(request, user_pk):
     recipient = get_object_or_404(User, pk=user_pk)
     if recipient == request.user:
-        return redirect('your-redirect-url')  # Redirect to prevent messaging oneself.
+        return redirect('blog/why.html')  # Redirect to prevent messaging oneself.
 
     # Check if there is an existing conversation between the users
     existing_convos = Convo.objects.filter(members=request.user).filter(members=recipient).distinct()
@@ -459,3 +496,6 @@ def detailM(request, pk):
         'convo': convo,
         'form': form
     })
+    
+def why(request):
+    return render(request, 'blog/why.html')

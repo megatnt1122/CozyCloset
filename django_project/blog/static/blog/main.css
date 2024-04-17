@@ -103,3 +103,20 @@ a.article-title:hover {
 .tab4 {
   tab-size: 5;
 }
+
+.object-fit_fill { object-fit: fill }
+
+.portrait {
+    height: 320px;
+    width: 120px;
+}
+
+.landscape {
+    height:240px;
+    width: 640px;
+}
+
+.square {
+    height: 320px;
+    width: 320px;
+}
