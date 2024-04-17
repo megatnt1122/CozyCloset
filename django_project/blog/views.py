@@ -82,6 +82,7 @@ class AddCommentView(CreateView):
     #fields = '__all__'
     def form_valid(self, form):
         form.instance.post_id = self.kwargs['pk']
+        form.instance.name = self.request.user
         return super().form_valid(form)
     success_url = reverse_lazy('blog-home')
 
@@ -444,7 +445,7 @@ def view_outfits(request):
 def new_message(request, user_pk):
     recipient = get_object_or_404(User, pk=user_pk)
     if recipient == request.user:
-        return redirect('your-redirect-url')  # Redirect to prevent messaging oneself.
+        return redirect('blog/why.html')  # Redirect to prevent messaging oneself.
 
     # Check if there is an existing conversation between the users
     existing_convos = Convo.objects.filter(members=request.user).filter(members=recipient).distinct()
@@ -496,3 +497,6 @@ def detailM(request, pk):
         'convo': convo,
         'form': form
     })
+    
+def why(request):
+    return render(request, 'blog/why.html')
