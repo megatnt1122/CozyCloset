@@ -12,12 +12,57 @@
 		  	<a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'post-delete' object.id %}">Delete</a>
 		  </div>
 		  {% endif %}
+		  
 		</div>
 		<h2 class="article-title">{{ object.title }}</h2>
 		<p class="article-content">{{ object.content }}</p>
+		
 		{% if object.image.url != undefined %}
 		<img class="image" src="{{ object.image.url }}">
 		{% endif %}
+				  <form action="{% url 'like_post' post.pk %}"
+		  method="POST">
+			{% csrf_token %}
+			{% if user.is_authenticated %}
+				{% if liked %}
+					<button type="submit", name="post_id" value="{{ post.id }}">
+					<img src="https://cdn-icons-png.flaticon.com/256/81/81250.png" alt="Unlike button" style="width:10px; height:10px;">
+					</button>
+				{% else %}
+					<button type="submit", name="post_id" value="{{ post.id }}">
+					<img src="https://cdn-icons-png.flaticon.com/512/126/126473.png " alt="Like button" style="width:10px; height:10px;">
+					</button>
+				{% endif %}
+			{% else %}
+				<small><a href="{% url 'login' %}">Login</a>
+				Login to like</small>
+			{% endif %}
+			{{ total_likes }} Likes
+		  </form>
+		  <br/><br/>
+		  
+		  <h2>Comments...</h2>
+		  <br/>
+		  {% if not post.comments.all %}
+			No Comments Yet...<a href="{% url 'add_comment' post.pk %}">
+			Add One</a>
+		  {% else %}
+		  
+		  <a href="{% url 'add_comment' post.pk %}">Add Comment</a>
+		  <br/><br/>
+		 
+				{% for comment in post.comments.all %}
+					<strong>
+					{{ comment.name }} -
+					{{ comment.date_added }}
+					</strong>
+					<br/>
+					{{ comment.body }}
+					<br/><br/>
+					<hr>
+					{% endfor %}
+		  {% endif %}
+		  <br/>
 	  </div>
 	</article>
 {% endblock content %}

@@ -10,6 +10,10 @@ class Post(models.Model):
     date_posted = models.DateTimeField(default=timezone.now)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(default='', null=True, blank=True, upload_to='post_photos')
+    likes = models.ManyToManyField(User, related_name='blog_posts')
+    
+    def total_likes(self):
+        return self.likes.count()
     
     def __str__(self):
         return self.title
@@ -49,10 +53,10 @@ class colors(models.Model):
         return self.color
 
 class userClothes(models.Model):
-    name = models.CharField(max_length=25, default='', verbose_name='*Name')
-    category = models.ForeignKey(clothingCategories, on_delete=models.CASCADE, verbose_name='*Category')
-    style = models.ForeignKey(clothingStyles, on_delete=models.CASCADE, verbose_name='*Style')
-    color = models.ForeignKey(colors, on_delete=models.CASCADE, verbose_name='*Color')
+    name = models.CharField(max_length=25, default='', verbose_name='Name')
+    category = models.ForeignKey(clothingCategories, on_delete=models.CASCADE, verbose_name='Category')
+    style = models.ForeignKey(clothingStyles, on_delete=models.CASCADE, verbose_name='Style')
+    color = models.ForeignKey(colors, on_delete=models.CASCADE, verbose_name='Color')
     image = models.ImageField(default='', upload_to='clothing_photos')
     bloguser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
 
@@ -128,19 +132,11 @@ class ConvoMessage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User,related_name='created_message', on_delete=models.CASCADE, default=1)
 
-class CommentSection(models.Model):
-    commentuser = models.ForeignKey(User, related_name='commentUser', on_delete=models.CASCADE, default=1)
-    commentmembers = models.ManyToManyField(User, related_name='commentsection')
-    created_when = models.DateTimeField(auto_now_add=True)
-    modified_when = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ('-modified_when',)
-
-
 class Comment(models.Model):
-    commentions = models.ForeignKey(CommentSection, related_name='commentMessage', on_delete=models.CASCADE, default=1)
-    content = models.TextField()
-    created_when = models.DateTimeField(auto_now_add=True)
-    created_when = models.ForeignKey(User,related_name='created_message_when', on_delete=models.CASCADE, default=1)
+    post = models.ForeignKey(Post,related_name="comments", on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    body = models.TextField()
+    date_added = models.DateTimeField(auto_now_add=True)
     
+    def __str__(self):
+        return '%s - %s' % (self.post.title, self.name)

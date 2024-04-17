@@ -32,15 +32,15 @@ urlpatterns = [
     path('delete/<str:itemid>/', views.deleteItem, name="delete-item"),
     path('delete/<str:itemid>/<str:closetid>/', views.deleteItem, name="delete-citem"),
     path('clothes/', views.Clothes, name='my-clothes'),
+    path('clothes/<str:itemid>/addtocloset/', views.AddToCloset, name='addto-closet'),
     path('clothes/<str:itemid>/addtopost/', PostCreateView.as_view(), name='addto-post'),
     path('view-outfits/', views.view_outfits, name='view-outfits'),
     path('search/', SearchView.as_view(), name='user-search'),
     path('dm/', views.dm, name='view-messages'),
     path('dm/<int:pk>', views.detailM, name='view-message'),
     path('dm/new/<int:user_pk>', views.new_message, name='send-message'),
-    path('comment/', views.commentlist, name='view-comments'),
-    path('comment/<int:pk>', views.commentmaker, name='view-comment'),
-    path('comment/new/<int:user_pk>', views.new_comment, name='send-comment')
+    path('like/<int:pk>', LikeView, name="like_post"),
+    path('post/<int:pk>/comment/', AddCommentView.as_view(), name='add_comment'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

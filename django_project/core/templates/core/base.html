@@ -14,9 +14,12 @@
     <body>
         <nav class="navbar navbar-expand-md navbar-dark bg-steel py-6 px-6 fixed-top flex justify-between items-center border-b">
         <!--py-6 px-6 flex justify-between items-center border-b border-gray-200">-->
-            <a href="/market" class="text xl font-semibold">Market</a>
-
+            <div class="navigation" style="float: left;">
+                <a class="navbar-brand mr-4" href="/"><img class="logo" src="/media/Logo.png" width="60" height="60" alt="Logo"></a>
+            </div>
+            
             <div class="space-x-6">
+                <a href="/market" class="text-lg font-semibold hover:text-gray-500">Market</a>
                 <a href="{% url 'item:new' %}" class="text-lg font-semibold hover:text-gray-500">New Item</a>
                 <a href="{% url 'item:items' %}" class="text-lg font-semibold hover:text-gray-500">Browse</a>
 				<a href="/" class="text-lg font-semibold hover:text-gray-500">Home</a>
