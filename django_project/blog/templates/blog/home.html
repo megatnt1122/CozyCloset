@@ -1,6 +1,7 @@
 {% extends "blog/base.html" %}
 {% block content %}
 	{% for post in posts %}
+	   <center>
 		<article class="media content-section">
 			<img class="rounded-circle article-img" href="{% url 'user-posts' post.author.username %}" src="{{ post.author.profile.image.url }}">
 			<!-- <a  Maybe future Idea: Click the user profile to see all their posts
@@ -23,6 +24,7 @@
 			{% endif %}
 		  </div>
 		</article>
+	    </center>
 	{% endfor %}
 	{% if is_paginated %}
 	
