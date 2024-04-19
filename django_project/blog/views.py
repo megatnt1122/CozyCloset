@@ -1,12 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect, reverse
+from django.urls import reverse_lazy
 from collections import defaultdict
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic.edit import UpdateView
 from django.contrib.auth.models import User
+from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
-from django.urls import reverse_lazy
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import (
     ListView,
     DetailView,
@@ -17,19 +19,8 @@ from django.views.generic import (
 from .models import Post
 from .forms import *
 from .models import *
-from django.db.models import Q
+from django.db.models import Q, Count
 
-def LikeView(request, pk):
-    post = get_object_or_404(Post, id=request.POST.get('post_id'))
-    liked = False
-    if post.likes.filter(id=request.user.id).exists():
-        post.likes.remove(request.user)
-        liked = False
-    else:
-        post.likes.add(request.user)
-        liked = True
-    
-    return HttpResponseRedirect(reverse('post-detail', args=[str(pk)])) #ThIS IS PROBABLY WRONG
 
 def home(request):
     context = {
@@ -139,15 +130,20 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
             return True
         return False
 
+
 # the view for the upload page
 class UploadView(LoginRequiredMixin, CreateView):
     model = userClothes
     fields = ['name','category','style','color','image']
+    template_name = "blog/userclothes_form.html"
+
 
     # links the current user to the item being uploaded
     def form_valid(self, form):
         form.instance.bloguser = self.request.user
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        messages.success(self.request, 'Item Added Successfully!')
+        return response
 
 # the view for creating a new closet
 class ClosetCreateView(LoginRequiredMixin, CreateView):
@@ -159,7 +155,6 @@ class ClosetCreateView(LoginRequiredMixin, CreateView):
         form.instance.closetUser = self.request.user
         return super().form_valid(form)
 
-# The view for editing a closet
 class ClosetUpdateView(LoginRequiredMixin, UpdateView):
     model = Closet
     fields = ['name', 'is_public']
@@ -170,6 +165,20 @@ class ClosetUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_object(self):
         return get_object_or_404(Closet, id=self.kwargs.get('closetid'), closetUser=self.request.user)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'redirect_url': self.get_success_url()})
+        else:
+            return response
+
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse(form.errors, status=400)
+        else:
+            return response
 
 
 def about(request):
@@ -212,14 +221,24 @@ def openMyCloset(request, closetid=None):
     clothes_in_closet = closetClothes.objects.filter(closet=closet)
     empty = not clothes_in_closet.exists()
     
-    # Organize clothes by category without using defaultdict
+    # Define a mapping from specific categories to general categories
+    category_mapping = {
+        'Long Sleeve': 'Tops',
+        'Short Sleeve': 'Tops',
+        'Pants': 'Bottoms',
+        'Shorts': 'Bottoms',
+        # Add other mappings as necessary
+    }
+    
+    # Organize clothes by general categories using the mapping
     categorized_clothes = {}
     for closet_item in clothes_in_closet:
-        category = closet_item.clothing_item.category.category
-        if category not in categorized_clothes:
-            categorized_clothes[category] = [closet_item.clothing_item]
+        specific_category = closet_item.clothing_item.category.category
+        general_category = category_mapping.get(specific_category, specific_category)  # Default to specific if not mapped
+        if general_category not in categorized_clothes:
+            categorized_clothes[general_category] = [closet_item.clothing_item]
         else:
-            categorized_clothes[category].append(closet_item.clothing_item)
+            categorized_clothes[general_category].append(closet_item.clothing_item)
 
     outfits = [o.outfit for o in closetOutfits.objects.filter(closet=closet)]
     
@@ -233,6 +252,7 @@ def openMyCloset(request, closetid=None):
     }
 
     return render(request, 'blog/open_my_closet.html', context)
+
 
 @login_required
 def openUserCloset(request, username=None, closetname=None):
@@ -310,11 +330,11 @@ def createOutfit(request, closetid=None):
 
     if request.method == 'POST':
         # Extract item IDs from POST data
-        top_id = request.POST.get('top')
-        bottoms_id = request.POST.get('bottoms')
-        footwear_id = request.POST.get('footwear')
-        accessory_id = request.POST.get('accessory')  # These are optional, so they might be empty strings.
-        outerwear_id = request.POST.get('outerwear')
+        top_id = request.POST.get('selectedTop')
+        bottoms_id = request.POST.get('selectedBottoms')
+        footwear_id = request.POST.get('selectedFootwear')
+        accessory_id = request.POST.get('selectedAccessory') 
+        outerwear_id = request.POST.get('selectedOuterwear')
 
         # Attempt to retrieve the corresponding userClothes instances
         try:
@@ -332,7 +352,7 @@ def createOutfit(request, closetid=None):
             closetOutfit = closetOutfits(closet=closet, outfit=outfit, user=request.user)
             closetOutfit.save()
 
-            messages.success(request, "Outfit created successfully!")
+            messages.success(request, ' ')
             return redirect(reverse('open-closet', kwargs={'closetid': closetid}))
 
         except userClothes.DoesNotExist:
@@ -342,14 +362,40 @@ def createOutfit(request, closetid=None):
 
     # If not POST method or if there was an error, re-display the form.
     categories = {
-        'top': userClothes.objects.filter(category__category='Top', bloguser=request.user, closetclothes__closet=closet),
-        'bottoms': userClothes.objects.filter(category__category='Bottoms', bloguser=request.user, closetclothes__closet=closet),
-        'footwear': userClothes.objects.filter(category__category='Footwear', bloguser=request.user, closetclothes__closet=closet),
-        'accessories': userClothes.objects.filter(category__category='Accessory', bloguser=request.user, closetclothes__closet=closet),
-        'outerwear': userClothes.objects.filter(category__category='Outerwear', bloguser=request.user, closetclothes__closet=closet)
+        'top': userClothes.objects.filter(
+            Q(category__category='Long Sleeve') | Q(category__category='Short Sleeve'), 
+            bloguser=request.user, 
+            closetclothes__closet=closet
+        ),
+        'bottoms': userClothes.objects.filter(
+            Q(category__category='Pants') | Q(category__category='Shorts'), 
+            bloguser=request.user, 
+            closetclothes__closet=closet
+        ),
+        'footwear': userClothes.objects.filter(
+            category__category='Footwear', 
+            bloguser=request.user, 
+            closetclothes__closet=closet
+        ),
+        'accessory': userClothes.objects.filter(
+            category__category='Accessory', 
+            bloguser=request.user, 
+            closetclothes__closet=closet
+        ),
+        'outerwear': userClothes.objects.filter(
+            category__category='Outerwear', 
+            bloguser=request.user, 
+            closetclothes__closet=closet
+        )
     }
 
-    return render(request, 'blog/create_outfit.html', {'categories': categories, 'closet': closet})
+    
+
+    return render(request, 'blog/create_outfit.html', {
+        'categories': categories,
+        'closet': closet
+    })
+
 
 
 
@@ -357,23 +403,25 @@ def createOutfit(request, closetid=None):
 def AddToCloset(request, itemid=None):
     item = userClothes.objects.get(id=itemid)
 
-    if request.POST.get("save"):
-        for c in Closet.objects.filter(closetUser=request.user):
-            if request.POST.get(str(c.id)) == "clicked":
-                adding = closetClothes(closet=c, clothing_item=item, user=request.user)
-                adding.save()
-        return redirect(reverse('my-clothes'))
-    Closets = Closet.objects.filter(closetUser=request.user)
-    closets = []
-    for c in Closets:
-        if len(closetClothes.objects.filter(closet=c, clothing_item=item, user=request.user)) == 0:
-            closets.append(c)
+    if request.method == 'POST':
+        closets_ids = [key.split('_')[1] for key in request.POST.keys() if key.startswith('closet_')]
+        for closet_id in closets_ids:
+            closet = Closet.objects.get(id=closet_id)
+            adding = closetClothes(closet=closet, clothing_item=item, user=request.user)
+            adding.save()
+
+        return redirect('my-clothes')
+
+    closets = Closet.objects.filter(closetUser=request.user).exclude(closetclothes__clothing_item=item)
+
     context = {
         'user': request.user,
         'closets': closets,
+        'item': item
     }
 
     return render(request, 'blog/AddToCloset.html', context)
+
     
 @login_required
 def AddToPost(request, itemid=None):
@@ -416,12 +464,12 @@ def deleteCloset(request, closetid=None):
     return redirect(reverse('my-closets'))
 
 @login_required
-def deleteOutfit(request, closetid=None, outfitid=None):
-    coutfit = get_object_or_404(closetOutfits, closet=closetid, outfit=outfitid)
+def deleteOutfit(request, outfitid=None):
+    coutfit = get_object_or_404(closetOutfits, outfit=outfitid, user=request.user)
     outfit = coutfit.outfit
     coutfit.delete()
     outfit.delete()
-    return redirect(reverse('open-closet', kwargs={'closetid': closetid}))
+    return JsonResponse({'status': 'success', 'message': 'Outfit deleted'})
 
 class SearchView(ListView):
     model = User

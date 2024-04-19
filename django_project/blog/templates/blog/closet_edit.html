@@ -1,16 +1,156 @@
-{% extends "blog/base.html" %}
 {% block content %}
 <style>
-    /* Your CSS styles here */
+  .edit-closet-container {
+    max-width: 400px; /* Adjusted width for a more compact form */
+    margin: 30px auto;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 15px; /* Smoother border radius */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Softer shadow */
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+
+  h1 {
+    color: #4A4A4A;
+    font-size: 24px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  form label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+  }
+
+  form input[type='text'],
+  form input[type='checkbox'] {
+    padding: 12px;
+    border: 2px solid #eaeaea; /* Lighter border */
+    border-radius: 5px; /* Rounded corners for inputs */
+    margin-bottom: 20px; /* Increased space between inputs */
+    font-size: 14px;
+  }
+
+  form input[type='text'] {
+    height: 45px; /* Increased height */
+    border: 2px solid #3498db;
+  }
+
+  form input[type='checkbox'] {
+    width: 20px;
+    height: 20px;
+    transform: scale(1); /* Normal size */
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  form .checkbox-label {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #333;
+  }
+
+  button[type='submit'] {
+    margin-top: 25px;
+    padding: 12px 20px;
+    background-color: #3498db; /* Blue color */
+    color: #ffffff;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+  }
+
+  button[type='submit']:hover {
+    background-color: #2980b9; /* Darker shade on hover */
+  }
+
+  @media (max-width: 768px) {
+    .edit-closet-container {
+      width: 90%;
+      padding: 20px;
+    }
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+  }
+
+  .switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 34px;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
+  }
+
+  input:checked + .slider {
+    background-color: #2196F3;
+  }
+
+  input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+  }
+
+  input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+  }
 </style>
 
-<h1>Edit Closet</h1>
-
-<form method="post">
+<div class="edit-closet-container">
+  <h1>Edit Closet</h1>
+  <form method="post" action="{% url 'closet-edit' closetid=closet.id %}">
     {% csrf_token %}
-    {{ form.as_p }}
+    <label for="id_name">Name:</label>
+    {{ form.name }}
+    <label for="id_is_public">Public:</label>
+    <!--  toggle switch for public/private -->
+    <label class="switch">
+      {{ form.is_public }}
+      <span class="slider"></span>
+    </label>
 
     <button type="submit">Save Changes</button>
-</form>
-
+  </form>
+</div>
 {% endblock %}
