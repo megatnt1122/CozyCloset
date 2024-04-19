@@ -83,7 +83,7 @@ a.article-title:hover {
   font-size: 2.5rem;
 }
 
-
+.container4{width:100%;padding-right:400px;padding-left:400px;margin-right:auto;margin-left:auto}
 
 .container2 {
  display: grid;
@@ -102,4 +102,21 @@ a.article-title:hover {
 }
 .tab4 {
   tab-size: 5;
+}
+
+.object-fit_fill { object-fit: fill }
+
+.portrait {
+    height: 320px;
+    width: 120px;
+}
+
+.landscape {
+    height:240px;
+    width: 640px;
+}
+
+.square {
+    height: 320px;
+    width: 320px;
 }

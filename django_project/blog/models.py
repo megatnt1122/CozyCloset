@@ -23,8 +23,8 @@ class Post(models.Model):
         super(Post, self).save(*args, **kwargs)
         try:
             img = Image.open(self.image.path)
-            if img.height > 150 or img.width > 150:
-                output_size = (150, 150)
+            if img.height > 600 or img.width > 600:
+                output_size = (600, 600)
                 img.thumbnail(output_size)
                 img.save(self.image.path)
         except:
@@ -67,7 +67,7 @@ class userClothes(models.Model):
         self.name = self.name.title()
         super(userClothes, self).save(*args, **kwargs)
         img = Image.open(self.image.path)
-        output_size = (600, 600)
+        output_size = (1200, 1200)
         img.thumbnail(output_size)
         img.save(self.image.path)
 
