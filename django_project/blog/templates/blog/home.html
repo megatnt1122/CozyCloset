@@ -17,7 +17,7 @@
 			  <a class="navbar-brand mr-4" href="{% url 'post-detail' post.id %}"><img class="logo" src="/media/pencil.jpg" width="25" height="25" alt="Logo"></a>
 			  <!-- Line above is so you can update/see post details if it doesn't have a title -->
 			</div>
-			<h2><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>
+<!--			<h2><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>-->
 			{% if post.image.url != undefined %}
 				<img class="image" src="{{ post.image.url }}" style="max-width:800px; max-height:800px;">
 				<p class="article-content">{{ post.content }}</p>
