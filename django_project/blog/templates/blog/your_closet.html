@@ -1,6 +1,8 @@
 {% extends "blog/base.html" %}
 {% block content %}
 	<h1>Welcome To Your CozyCloset</h1>
+	<a href="{% url 'profile' %}">
 	<img class="rounded-circle account-img" src="{{ user.profile.image.url }}">
+	</a>
 		<h2 class="account-heading">{{ user.username }}'s Closets</h2>
 {% endblock content %}

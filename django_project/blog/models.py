@@ -23,8 +23,8 @@ class Post(models.Model):
         super(Post, self).save(*args, **kwargs)
         try:
             img = Image.open(self.image.path)
-            if img.height > 150 or img.width > 150:
-                output_size = (150, 150)
+            if img.height > 600 or img.width > 600:
+                output_size = (600, 600)
                 img.thumbnail(output_size)
                 img.save(self.image.path)
         except:
@@ -67,7 +67,7 @@ class userClothes(models.Model):
         self.name = self.name.title()
         super(userClothes, self).save(*args, **kwargs)
         img = Image.open(self.image.path)
-        output_size = (600, 600)
+        output_size = (1200, 1200)
         img.thumbnail(output_size)
         img.save(self.image.path)
 
@@ -133,15 +133,11 @@ class ConvoMessage(models.Model):
     created_by = models.ForeignKey(User,related_name='created_message', on_delete=models.CASCADE, default=1)
 
 class Comment(models.Model):
-    user = models.ForeignKey(User, related_name='commentUser', on_delete=models.CASCADE, default=1)
     post = models.ForeignKey(Post,related_name="comments", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
+    #commentuser = models.ForeignKey(User, related_name='created_comment', on_delete=models.CASCADE, default=1)
     body = models.TextField()
     date_added = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
         return '%s - %s' % (self.post.title, self.name)
-
-class Follows(models.Model):
-    user = models.ForeignKey(User, related_name='user', on_delete=models.CASCADE, default=1)
-    follows = models.ForeignKey(User, related_name='follows', on_delete=models.CASCADE, default=1)

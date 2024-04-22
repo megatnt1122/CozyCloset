@@ -1,5 +1,6 @@
 {% extends "blog/base.html" %}
 {% block content %}
+	<center>
 	<article class="media content-section">
 	  <img class="rounded-circle article-img" src="{{ object.author.profile.image.url }}">
 	  <div class="media-body">
@@ -14,23 +15,25 @@
 		  {% endif %}
 		  
 		</div>
-		<h2 class="article-title">{{ object.title }}</h2>
-		<p class="article-content">{{ object.content }}</p>
+		<!--<h2 class="article-title">{{ object.title }}</h2>-->
 		
 		{% if object.image.url != undefined %}
+		<a href={{object.image.url}} target="_blank">
 		<img class="image" src="{{ object.image.url }}">
+		</a>
 		{% endif %}
+		<p class="article-content">{{ object.content }}</p>
 				  <form action="{% url 'like_post' post.pk %}"
 		  method="POST">
 			{% csrf_token %}
 			{% if user.is_authenticated %}
 				{% if liked %}
 					<button type="submit", name="post_id" value="{{ post.id }}">
-					<img src="https://cdn-icons-png.flaticon.com/256/81/81250.png" alt="Unlike button" style="width:10px; height:10px;">
+					<img src="https://cdn-icons-png.flaticon.com/256/81/81250.png" alt="Unlike button" style="width:25px; height:25px;">
 					</button>
 				{% else %}
 					<button type="submit", name="post_id" value="{{ post.id }}">
-					<img src="https://cdn-icons-png.flaticon.com/512/126/126473.png " alt="Like button" style="width:10px; height:10px;">
+					<img src="https://cdn-icons-png.flaticon.com/512/126/126473.png " alt="Like button" style="width:25px; height:25px;">
 					</button>
 				{% endif %}
 			{% else %}
@@ -38,6 +41,7 @@
 				Login to like</small>
 			{% endif %}
 			{{ total_likes }} Likes
+			<a class="navbar-brand mr-4" href="{% url 'add_comment' post.pk %}"><img class="logo" src="/media/OIP.jpg" width="25" height="25" alt="Logo"></a>
 		  </form>
 		  <br/><br/>
 		  
@@ -65,4 +69,5 @@
 		  <br/>
 	  </div>
 	</article>
+	</center>
 {% endblock content %}

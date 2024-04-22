@@ -374,6 +374,7 @@ def AddToCloset(request, itemid=None):
     }
 
     return render(request, 'blog/AddToCloset.html', context)
+
     
 @login_required
 def AddToPost(request, itemid=None):
