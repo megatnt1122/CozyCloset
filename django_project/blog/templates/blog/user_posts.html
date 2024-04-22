@@ -9,8 +9,11 @@
               <a class="mr-2" href="{% url 'user-posts' post.author.username %}">{{ post.author }}</a>
               <small class="text-muted">{{ post.date_posted|date:"F d, Y" }}</small>
             </div>
-            <h2><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>
-            <p class="article-content">{{ post.content }}</p>
+            <!--<h2><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>-->
+			{% if post.image.url != undefined %}
+				<img class="image" src="{{ post.image.url }}" style="max-width:800px; max-height:800px;">
+			{% endif %}
+			<p class="article-content">{{ post.content }}</p>
           </div>
         </article>
     {% endfor %}

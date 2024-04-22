@@ -14,12 +14,12 @@
 		  {% endif %}
 		  
 		</div>
-		<h2 class="article-title">{{ object.title }}</h2>
-		<p class="article-content">{{ object.content }}</p>
+		<!--<h2 class="article-title">{{ object.title }}</h2>-->
 		
 		{% if object.image.url != undefined %}
 		<img class="image" src="{{ object.image.url }}">
 		{% endif %}
+		<p class="article-content">{{ object.content }}</p>
 				  <form action="{% url 'like_post' post.pk %}"
 		  method="POST">
 			{% csrf_token %}

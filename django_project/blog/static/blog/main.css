@@ -83,7 +83,12 @@ a.article-title:hover {
   font-size: 2.5rem;
 }
 
-.container4{width:100%;padding-right:400px;padding-left:400px;margin-right:auto;margin-left:auto}
+.container4 {
+ padding-right:	200px;
+ padding-left:	200px;
+ margin-right:	auto;
+ margin-left:	auto
+ }
 
 .container2 {
  display: grid;
