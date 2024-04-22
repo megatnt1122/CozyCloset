@@ -20,6 +20,48 @@
 				</a>
 			{% endif %}
 			<p class="article-content">{{ post.content }}</p>
+			
+				  <form action="{% url 'like_post' post.pk %}"
+		    method="POST">
+			{% csrf_token %}
+			{% if user.is_authenticated %}
+				{% if liked %}
+					<button type="submit", name="post_id" value="{{ post.id }}">
+					<img src="https://cdn-icons-png.flaticon.com/256/81/81250.png" alt="Unlike button" style="width:25px; height:25px;">
+					</button>
+				{% else %}
+					<button type="submit", name="post_id" value="{{ post.id }}">
+					<img src="https://cdn-icons-png.flaticon.com/512/126/126473.png " alt="Like button" style="width:25px; height:25px;">
+					</button>
+				{% endif %}
+			{% else %}
+				<small><a href="{% url 'login' %}">Login</a>
+				Login to like</small>
+			{% endif %}
+			{{ total_likes }} Likes
+			<a class="navbar-brand mr-4" href="{% url 'add_comment' post.pk %}"><img class="logo" src="/media/OIP.jpg" width="25" height="25" alt="Logo"></a>
+		  </form>
+		  <br/><br/>
+		  
+		  <h2>Comments...</h2>
+		  <br/>
+		  {% if not post.comments.all %}
+			No Comments Yet...
+		  {% else %}
+		 
+				{% for comment in post.comments.all|slice:"1:3" %}
+					<strong>
+					{{ comment.name }} -
+					{{ comment.date_added }}
+					</strong>
+					<br/>
+					{{ comment.body }}
+					<br/><br/>
+					<hr>
+					{% endfor %}
+		  {% endif %}
+		  <br/>
+		  
 		  </div>
 		</article>
 	    </center>
