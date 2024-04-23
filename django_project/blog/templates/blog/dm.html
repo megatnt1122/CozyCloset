@@ -1,6 +1,6 @@
 {% extends 'blog/base.html' %}
 
-{% block title %}Messages{% endblock %}
+{% block title %}Message{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -50,11 +50,11 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-6 text-3xl text-center">Messages</h1>
+    <h1 class="mb-6 text-3xl text-center">Message</h1>
 
     <div class="messages-container">
         {% for convos in convo %}
-            <a href="{% url 'convo:detailM' convos.id %}" class="message-link">
+            <a href="{% url 'convos:detailM' convos.id %}" class="message-link">
                 <div class="message-item">
                     <img src="{{ convos.user.profile.image.url }}" class="message-profile-pic">
                     <div class="message-info">

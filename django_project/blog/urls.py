@@ -6,6 +6,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
+
 urlpatterns = [
     path('', PostListView.as_view(), name='blog-home'),
     path('market/', include('core.urls')),
@@ -36,7 +37,7 @@ urlpatterns = [
     path('clothes/<str:itemid>/addtopost/', PostCreateView.as_view(), name='addto-post'),
     path('view-outfits/', views.view_outfits, name='view-outfits'),
     path('search/', SearchView.as_view(), name='user-search'),
-    path('dm/', views.dm, name='view-messages'),
+    path('dm/', views.dm, name='dm'),
     path('dm/<int:pk>', views.detailM, name='view-message'),
     path('dm/new/<int:user_pk>', views.new_message, name='send-message'),
     path('like/<int:pk>', LikeView, name="like_post"),
