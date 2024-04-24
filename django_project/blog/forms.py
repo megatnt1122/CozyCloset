@@ -22,7 +22,7 @@ class DirectMessagingForm(forms.ModelForm):
         fields = ['content',]
         widgets = {
             'content': forms.Textarea(attrs={
-                'class': 'form-control' #'w-full py-4 px-6 rounded-xl border'
+                'cols': 160, 'rows': 10, 'resizable': 0  #'w-full py-4 px-6 rounded-xl border'
             })
         }
 class CommentForm(forms.ModelForm):
