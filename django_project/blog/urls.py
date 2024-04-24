@@ -43,6 +43,7 @@ urlpatterns = [
     path('like/<int:pk>', LikeView, name="like_post"),
     path('post/<int:pk>/comment/', AddCommentView.as_view(), name='add_comment'),
     path('dm/new/blog/why.html', why, name='dm'),
+    path('comments/<int:comment_id>/like/', views.CommentLikeView, name='comment_like'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

@@ -38,7 +38,7 @@
 				<small><a href="{% url 'login' %}">Login</a>
 				Login to like</small>
 			{% endif %}
-			{{ total_likes }} Likes
+			{{ post.total_likes }} Likes
 			<a class="navbar-brand mr-4" href="{% url 'add_comment' post.pk %}"><img class="logo" src="/media/OIP.jpg" width="25" height="25" alt="Logo"></a>
 		  </form>
 		  <br/><br/>
@@ -53,6 +53,14 @@
 					<strong>
 					{{ comment.name }} -
 					{{ comment.date_added }}
+					
+					<a href="{% url 'comment_like' comment.id %}">
+					<button>{{ comment.liked }}
+					<img src="https://cdn-icons-png.flaticon.com/512/126/126473.png " alt="Like button" style="width:25px; height:25px;">
+					</button>
+					</a>
+				<span>Likes: {{ comment.likes.count }}</span>
+					
 					</strong>
 					<br/>
 					{{ comment.body }}

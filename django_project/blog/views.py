@@ -29,8 +29,18 @@ def LikeView(request, pk):
         post.likes.add(request.user)
         liked = True
     
-    return HttpResponseRedirect(reverse('post-detail', args=[str(pk)])) #ThIS IS PROBABLY WRONG
+    return HttpResponseRedirect(reverse('blog-home')) #ThIS IS PROBABLY WRONG
+    #return HttpResponseRedirect(reverse('post-detail', args=[str(pk)])) #ThIS IS PROBABLY WRONG
 
+@login_required
+def CommentLikeView(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    if request.user.is_authenticated:
+        if comment.likes.filter(id=request.user.id).exists():
+            comment.likes.remove(request.user)
+        else:
+            comment.likes.add(request.user)
+    return HttpResponseRedirect(reverse('blog-home'))
 def home(request):
     context = {
         'posts': Post.objects.all()

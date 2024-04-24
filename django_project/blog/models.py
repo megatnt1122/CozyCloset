@@ -142,6 +142,9 @@ class Comment(models.Model):
     #commentuser = models.ForeignKey(User, related_name='created_comment', on_delete=models.CASCADE, default=1)
     body = models.TextField()
     date_added = models.DateTimeField(auto_now_add=True)
+    likes = models.ManyToManyField(User, related_name='liked_comments', blank=True)  # New field for likes
+    
+    
     
     def __str__(self):
         return '%s - %s' % (self.post.title, self.name)
