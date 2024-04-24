@@ -1,14 +1,14 @@
 from django.shortcuts import render, get_object_or_404, redirect, reverse
-from django.urls import reverse_lazy
 from collections import defaultdict
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic.edit import UpdateView
 from django.contrib.auth.models import User
-from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import (
     ListView,
     DetailView,
@@ -19,8 +19,20 @@ from django.views.generic import (
 from .models import Post
 from .forms import *
 from .models import *
-from django.db.models import Q, Count
+from django.db.models import Q
+from collections import defaultdict
 
+def LikeView(request, pk):
+    post = get_object_or_404(Post, id=request.POST.get('post_id'))
+    liked = False
+    if post.likes.filter(id=request.user.id).exists():
+        post.likes.remove(request.user)
+        liked = False
+    else:
+        post.likes.add(request.user)
+        liked = True
+    
+    return HttpResponseRedirect(reverse('post-detail', args=[str(pk)])) #ThIS IS PROBABLY WRONG
 
 def home(request):
     context = {
@@ -36,6 +48,13 @@ class PostListView(ListView):
     ordering = ['-date_posted']
     paginate_by = 5
 
+    def get_queryset(self):
+        # Get the IDs of the users followed by the current user
+        followed_user_ids = Follow.objects.filter(follower=self.request.user).values_list('followed_id', flat=True)
+        # Filter posts by authors who are followed by the current user
+        queryset = super().get_queryset().filter(author_id__in=followed_user_ids)
+        return queryset
+
 
 class UserPostListView(ListView):
     model = Post
@@ -50,7 +69,32 @@ class UserPostListView(ListView):
 
 class PostDetailView(DetailView):
     model = Post
+    
+    def get_context_data(self, *args, **kwargs):
+        context = super(PostDetailView, self).get_context_data(*args,**kwargs)
+        
+        
+        stuff = get_object_or_404(Post, id=self.kwargs['pk'])
+        total_likes = stuff.total_likes()
+        
+        liked = False
+        if stuff.likes.filter(id=self.request.user.id).exists():
+            liked = True
 
+        context["total_likes"] = total_likes
+        context["liked"] = liked
+        return context
+
+class AddCommentView(CreateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/add_comment.html'
+    #fields = '__all__'
+    def form_valid(self, form):
+        form.instance.post_id = self.kwargs['pk']
+        form.instance.name = self.request.user
+        return super().form_valid(form)
+    success_url = reverse_lazy('blog-home')
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
@@ -105,20 +149,15 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
             return True
         return False
 
-
 # the view for the upload page
 class UploadView(LoginRequiredMixin, CreateView):
     model = userClothes
     fields = ['name','category','style','color','image']
-    template_name = "blog/userclothes_form.html"
-
 
     # links the current user to the item being uploaded
     def form_valid(self, form):
         form.instance.bloguser = self.request.user
-        response = super().form_valid(form)
-        messages.success(self.request, 'Item Added Successfully!')
-        return response
+        return super().form_valid(form)
 
 # the view for creating a new closet
 class ClosetCreateView(LoginRequiredMixin, CreateView):
@@ -202,7 +241,9 @@ def openMyCloset(request, closetid=None):
         'Short Sleeve': 'Tops',
         'Pants': 'Bottoms',
         'Shorts': 'Bottoms',
-        # Add other mappings as necessary
+        'Footwear': 'Footwear',
+        'Outerwear': 'Outerwear',
+        'Accessories': 'Accessories',
     }
     
     # Organize clothes by general categories using the mapping
@@ -215,19 +256,24 @@ def openMyCloset(request, closetid=None):
         else:
             categorized_clothes[general_category].append(closet_item.clothing_item)
 
+    # Define category order
+    category_order = ['Tops', 'Bottoms', 'Footwear', 'Outerwear', 'Accessories']
+
+    # Sort the categories based on the predefined order
+    sorted_categorized_clothes = {category: categorized_clothes[category] for category in category_order if category in categorized_clothes}
+
     outfits = [o.outfit for o in closetOutfits.objects.filter(closet=closet)]
     
     context = {
         'closet': closet,
         'username': username,
-        'categorized_clothes': categorized_clothes,
+        'categorized_clothes': sorted_categorized_clothes,
         'title': closet.name,
         'empty': empty,
         'user_outfits': outfits
     }
 
     return render(request, 'blog/open_my_closet.html', context)
-
 
 @login_required
 def openUserCloset(request, username=None, closetname=None):
@@ -372,8 +418,6 @@ def createOutfit(request, closetid=None):
     })
 
 
-
-
 @login_required
 def AddToCloset(request, itemid=None):
     item = userClothes.objects.get(id=itemid)
@@ -458,6 +502,25 @@ class SearchView(ListView):
             queryset = queryset.filter(username__icontains=search_query)
         return queryset
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get the list of users
+        users = context['users']
+        # Get the current user
+        current_user = self.request.user
+        # Remove the current user from the list
+        users = [user for user in users if user != current_user]
+        # Create a dictionary to store following status
+        following_status = {}
+        # Retrieve follow relationships for the current user
+        follows = Follow.objects.filter(follower=current_user, followed__in=users)
+        # Populate following_status dictionary
+        for user in users:
+            following_status[user] = follows.filter(followed=user).exists()
+        # Add following_status to the context
+        context['following_status'] = following_status
+        return context
+
 @login_required
 def view_outfits(request):
     user_outfits = Outfit.objects.filter(user=request.user)  # Get all outfits for the logged-in user
@@ -467,7 +530,7 @@ def view_outfits(request):
 def new_message(request, user_pk):
     recipient = get_object_or_404(User, pk=user_pk)
     if recipient == request.user:
-        return redirect('your-redirect-url')  # Redirect to prevent messaging oneself.
+        return redirect('blog/why.html')  # Redirect to prevent messaging oneself.
 
     # Check if there is an existing conversation between the users
     existing_convos = Convo.objects.filter(members=request.user).filter(members=recipient).distinct()
@@ -519,3 +582,25 @@ def detailM(request, pk):
         'convo': convo,
         'form': form
     })
+    
+@method_decorator(login_required, name='dispatch')
+class FollowUserView(View):
+    def post(self, request, username):
+        user_to_follow = get_object_or_404(User, username=username)
+        follow, created = Follow.objects.get_or_create(follower=request.user, followed=user_to_follow)
+        if created:
+            # Optionally send a notification to `user_to_follow`, or do any other additional actions
+            pass
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+@method_decorator(login_required, name='dispatch')
+class UnfollowUserView(View):
+    def post(self, request, username):
+        user_to_unfollow = get_object_or_404(User, username=username)
+        try:
+            follow = Follow.objects.get(follower=request.user, followed=user_to_unfollow)
+            follow.delete()
+            # Optionally add some kind of notification that they've unfollowed
+        except Follow.DoesNotExist:
+            pass
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))

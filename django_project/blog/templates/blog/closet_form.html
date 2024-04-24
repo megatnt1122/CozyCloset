@@ -60,10 +60,10 @@
     color: #333;
   }
 
-  button[type='submit'] {
+  .submit-button {
     margin-top: 25px;
     padding: 12px 20px;
-    background-color: #3498db;
+    background-color: #3498db; /* Blue color */
     color: #ffffff;
     border-radius: 5px;
     font-size: 16px;
@@ -73,8 +73,8 @@
     transition: background-color 0.3s ease-in-out;
   }
 
-  button[type='submit']:hover {
-    background-color: #2980b9;
+  .submit-button:hover {
+    background-color: #2980b9; /* Darker shade on hover */
   }
 
   @media (max-width: 768px) {
@@ -96,7 +96,7 @@
     {% csrf_token %}
     <label for="id_name">Name:</label>
     {{ form.name }}
-    <button type="submit">Create</button>
+    <button type="submit" class="submit-button">Create</button>
   </form>
 </div>
 {% endblock %}

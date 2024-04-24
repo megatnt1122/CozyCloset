@@ -93,19 +93,19 @@
 
 <div class="container">
     {% for closet in closets %}
-        {% if closet.is_public %}
-        <li class="images">
+    {% if closet.is_public %}
+    <li class="images">
+        <a href="/{{username}}/closets/{{closet.name}}/">
+            <img src="/media/closet.png" width="200" height="200">
+        </a>
+        <div class="button-wrapper">
+            <h3 class="closetnames">{{ closet.name }}</h3>
             <a href="/{{username}}/closets/{{closet.name}}/">
-                <img src="/media/closet.png" width="200" height="200">
+                <button class="view">View</button>
             </a>
-            <div class="button-wrapper">
-                <h3 class="closetnames">{{ closet.name }}</h3>
-                <a href="/{{username}}/closets/{{closet.name}}/">
-                    <button class="view">View</button>
-                </a>
-            </div>
-        </li>
+        </div>
+    </li>
     {% endif %}
-{% endfor %}
+    {% endfor %}
 </div>
 {% endblock %}

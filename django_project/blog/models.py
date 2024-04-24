@@ -9,7 +9,11 @@ class Post(models.Model):
     content = models.TextField(blank=True)
     date_posted = models.DateTimeField(default=timezone.now)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    image = models.ImageField(default='', null=True, blank=True, upload_to='post_photos')
+    image = models.ImageField(default='', null=True, upload_to='post_photos')
+    likes = models.ManyToManyField(User, related_name='blog_posts')
+    
+    def total_likes(self):
+        return self.likes.count()
     
     def __str__(self):
         return self.title
@@ -19,8 +23,8 @@ class Post(models.Model):
         super(Post, self).save(*args, **kwargs)
         try:
             img = Image.open(self.image.path)
-            if img.height > 150 or img.width > 150:
-                output_size = (150, 150)
+            if img.height > 600 or img.width > 600:
+                output_size = (600, 600)
                 img.thumbnail(output_size)
                 img.save(self.image.path)
         except:
@@ -63,9 +67,10 @@ class userClothes(models.Model):
         self.name = self.name.title()
         super(userClothes, self).save(*args, **kwargs)
         img = Image.open(self.image.path)
-        output_size = (600, 600)
-        img.thumbnail(output_size)
-        img.save(self.image.path)
+        if img.width > 1440 or img.height > 1440:
+            output_size = (1200, 1200)
+            img.thumbnail(output_size)
+            img.save(self.image.path)
 
     def get_absolute_url(self):
         return '/upload/'
@@ -127,3 +132,24 @@ class ConvoMessage(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User,related_name='created_message', on_delete=models.CASCADE, default=1)
+
+class Comment(models.Model):
+    post = models.ForeignKey(Post,related_name="comments", on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    #commentuser = models.ForeignKey(User, related_name='created_comment', on_delete=models.CASCADE, default=1)
+    body = models.TextField()
+    date_added = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return '%s - %s' % (self.post.title, self.name)
+
+class Follow(models.Model):
+    follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)
+    followed = models.ForeignKey(User, related_name='followers', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('follower', 'followed')  # Ensure unique follow relationships
+
+    def __str__(self):
+        return f"{self.follower.username} follows {self.followed.username}"

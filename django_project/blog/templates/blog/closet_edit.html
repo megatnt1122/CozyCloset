@@ -59,7 +59,7 @@
     color: #333;
   }
 
-  button[type='submit'] {
+  .submit-button {
     margin-top: 25px;
     padding: 12px 20px;
     background-color: #3498db; /* Blue color */
@@ -72,7 +72,7 @@
     transition: background-color 0.3s ease-in-out;
   }
 
-  button[type='submit']:hover {
+  .submit-button:hover {
     background-color: #2980b9; /* Darker shade on hover */
   }
 
@@ -133,7 +133,7 @@
   input:checked + .slider:before {
     -webkit-transform: translateX(26px);
     -ms-transform: translateX(26px);
-    transform: translateX(26px);
+    transform: translateX(26px); 
   }
 </style>
 
@@ -150,7 +150,7 @@
       <span class="slider"></span>
     </label>
 
-    <button type="submit">Save Changes</button>
+    <button type="submit" class="submit-button">Save Changes</button>
   </form>
 </div>
 {% endblock %}
