@@ -29,6 +29,7 @@ class Item(models.Model):
     category = models.ForeignKey(Category, related_name='items', on_delete=models.CASCADE,default=0)
     name = models.CharField(max_length=255)
     size = models.ForeignKey(Size, related_name='items', on_delete=models.CASCADE,default=1)
+    shoeSize = models.ForeignKey(ShoeSize, related_name='items', on_delete=models.CASCADE,default=1)
     description = models.TextField(blank=True, null=True)
     price = models.FloatField()
     image = models.ImageField(upload_to='item_images', blank=True, null=True)
@@ -39,7 +40,3 @@ class Item(models.Model):
     def __str__(self):
         return self.name
     
-@receiver(pre_save, sender=Item)
-def set_shoe_size(sender, instance, **kwargs):
-    if instance.category.name == 'Footwear':
-        instance.size = ShoeSize.objects.get_or_create(name='items')[0]
