@@ -1,8 +1,5 @@
 {% extends 'blog/base.html' %}
-
-{% block title %}Message{% endblock %}
-
-{% block extra_css %}
+{% block content %}
 <style>
     .messages-container {
         margin-top: 20px;
@@ -15,20 +12,20 @@
         display: flex;
         align-items: center;
         padding: 20px;
-        background-color: #f9f9f9; /* Light grey background */
+        background-color: #f9f9f9;
         border-radius: 10px;
-        margin-bottom: 20px; /* Space between messages */
-        transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+        margin-bottom: 20px;
+        transition: background-color 0.3s ease;
     }
     .message-item:hover {
-        background-color: #e9ecef; /* Slightly darker on hover */
+        background-color: #e9ecef; 
     }
     .message-profile-pic {
-        width: 60px; /* Adjust based on your preference */
-        height: 60px; /* Maintain aspect ratio */
-        object-fit: cover; /* Ensure the image covers the area */
-        border-radius: 50%; /* Circular image */
-        margin-right: 20px; /* Space between image and text */
+        width: 60px;
+        height: 60px;
+        object-fit: cover; 
+        border-radius: 50%;
+        margin-right: 20px; 
     }
     .message-info {
         flex-grow: 1;
@@ -42,33 +39,30 @@
         font-weight: bold;
     }
     .message-timestamp {
-        font-size: 0.875rem; /* Smaller text for timestamp */
-        color: #6c757d; /* Grey color */
+        font-size: 0.875rem;
+        color: #6c757d;
     }
 </style>
-{% endblock %}
 
-{% block content %}
 <div class="container">
-    <h1 class="mb-6 text-3xl text-center">Message</h1>
-
+    <h1 class="mb-4 text-3xl text-center">Inbox</h1>
     <div class="messages-container">
-        {% for convos in convo %}
-            <a href="{% url 'convos:detailM' convos.id %}" class="message-link">
-                <div class="message-item">
-                    <img src="{{ convos.user.profile.image.url }}" class="message-profile-pic">
-                    <div class="message-info">
-                        {% for member in convos.members.all %}
-                            {% if member != request.user %}
-                                <div class="message-details">
-                                    <p class="message-username"><strong>{{ member.username }}</strong></p>
-                                    <p class="message-timestamp">{{ convos.modified_at }}</p>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
-            </a>
+        {% for convo in convos %}
+            {% for member in convo.members.all %}
+                {% if member != request.user %}
+                    <a href="{% url 'send-message' member.id %}" class="message-link">
+                        <div class="message-item">
+                            <img src="{{ member.profile.image.url }}" class="message-profile-pic">
+                            <div class="message-info">
+                                <p class="message-username">{{ member.username }}</p>
+                                <p class="message-timestamp">{{ convo.modified_at|date:"M d, Y P" }}</p>
+                            </div>
+                            <!-- Add a placeholder for the latest message preview if available -->
+                            <p class="message-preview">Latest message preview...</p>
+                        </div>
+                    </a>
+                {% endif %}
+            {% endfor %}
         {% endfor %}
     </div>
 </div>
