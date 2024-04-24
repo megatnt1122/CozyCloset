@@ -16,7 +16,7 @@
             <!--<h2><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>-->
 			{% if post.image.url != undefined %}
 				<a href={{post.image.url}} target="_blank">
-				<img class="image" src="{{ post.image.url }}" target="_blank" style="max-width:800px; max-height:800px;">
+				<img class="image landscape" src="{{ post.image.url }}" target="_blank" style="max-width:800px; max-height:800px;">
 				</a>
 			{% endif %}
 			<p class="article-content">{{ post.content }}</p>
