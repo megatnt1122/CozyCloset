@@ -80,6 +80,7 @@
     <form method="post" action="" class="message-form">
         {% csrf_token %}
         {{ form.content }}
+        <br>
         <button type="submit">Send</button>
     </form>
 </div>
