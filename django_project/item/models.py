@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
@@ -17,6 +19,12 @@ class Size(models.Model):
     def __str__(self):
         return self.name
     
+class ShoeSize(models.Model):
+     name = models.CharField(max_length=255)
+
+     def __str__(self):
+        return self.name
+    
 class Item(models.Model):
     category = models.ForeignKey(Category, related_name='items', on_delete=models.CASCADE,default=0)
     name = models.CharField(max_length=255)
@@ -30,3 +38,8 @@ class Item(models.Model):
 
     def __str__(self):
         return self.name
+    
+@receiver(pre_save, sender=Item)
+def set_shoe_size(sender, instance, **kwargs):
+    if instance.category.name == 'Footwear':
+        instance.size = ShoeSize.objects.get_or_create(name='items')[0]
