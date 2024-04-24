@@ -49,7 +49,7 @@
 			No Comments Yet...
 		  {% else %}
 		 
-				{% for comment in post.comments.all|slice:"1:3" %}
+				{% for comment in post.comments.all|slice:"0:2" %}
 					<strong>
 					{{ comment.name }} -
 					{{ comment.date_added }}

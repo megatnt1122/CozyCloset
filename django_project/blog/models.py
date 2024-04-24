@@ -5,7 +5,7 @@ from django.urls import reverse
 from PIL import Image
 
 class Post(models.Model):
-    title = models.CharField(blank=True, max_length=100)
+    #title = models.CharField(blank=True, max_length=100) #Might can remove it
     content = models.TextField(blank=True)
     date_posted = models.DateTimeField(default=timezone.now)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -19,7 +19,7 @@ class Post(models.Model):
         return self.title
     
     def save(self, *args, **kwargs):
-        self.name = self.title.title()
+        #self.name = self.title.title()
         super(Post, self).save(*args, **kwargs)
         try:
             img = Image.open(self.image.path)
