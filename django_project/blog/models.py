@@ -129,6 +129,10 @@ class Convo(models.Model):
     class Meta:
         ordering = ('-modified_at',)
 
+    def last_message(self):
+        #return last message in convo
+        return self.convoMessage.order_by('-created_at').first()
+
 
 class ConvoMessage(models.Model):
     conversing = models.ForeignKey(Convo, related_name='convoMessage', on_delete=models.CASCADE, default=1)
