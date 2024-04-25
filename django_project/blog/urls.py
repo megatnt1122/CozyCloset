@@ -37,13 +37,12 @@ urlpatterns = [
     path('clothes/<str:itemid>/addtopost/', PostCreateView.as_view(), name='addto-post'),
     path('view-outfits/', views.view_outfits, name='view-outfits'),
     path('search/', SearchView.as_view(), name='user-search'),
-    path('dm/', views.dm, name='view-messages'),
+    path('dm', views.dm, name='view-messages'),
     path('dm/<int:pk>', views.detailM, name='view-message'),
     path('dm/new/<int:user_pk>', views.new_message, name='send-message'),
     path('like/<int:pk>', LikeView, name="like_post"),
     path('post/<int:pk>/comment/', AddCommentView.as_view(), name='add_comment'),
-    path('dm/new/blog/why.html', why, name='dm'),
-    path('comments/<int:comment_id>/like/', views.CommentLikeView, name='comment_like'),
+    path('dm/new/blog/why.html', why, name='why'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
