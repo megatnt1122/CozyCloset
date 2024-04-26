@@ -56,9 +56,9 @@
                             <div class="message-info">
                                 <p class="message-username">{{ member.username }}</p>
                                 <p class="message-timestamp">{{ convo.modified_at|date:"M d, Y P" }}</p>
-                                <!-- Add a placeholder for the latest message preview if available -->
-                                <p class="message-preview">{{ convo.last_message }}</p>
                             </div>
+                            <!-- Add a placeholder for the latest message preview if available -->
+                            <p class="message-preview">{{ convo.last_message }}</p>
                         </div>
                     </a>
                 {% endif %}
