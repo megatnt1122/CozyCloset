@@ -5,11 +5,26 @@
 {% block content %}
 <h1 class="mb-6 text-3xl">{{ title }}</h1>
 
-<form method="post" action="." enctype="multipart/form-data">
+<form id="itemForm" method="post" action="." enctype="multipart/form-data">
     {% csrf_token %}
     
     <div class="space-y-4">
-        {{ form.as_p }}
+        {{ form.category }}
+
+        <!-- Regular Size Dropdown -->
+        <div id="regular_size" style="display: none;">
+            {{ form.size }}
+        </div>
+        
+        <!-- Shoe Size Dropdown -->
+        <div id="shoe_size" style="display: none;">
+            {{ form.shoeSize }}
+        </div>
+        
+        {{ form.name }}
+        {{ form.description }}
+        {{ form.price }}
+        {{ form.image }}
     </div>
 
     {% if form.errors or form.non_field_errors %}
@@ -17,11 +32,35 @@
             {% for field in form %}
                 {{ field.errors }}
             {% endfor %}
-
             {{ form.non_field_errors }}
         </div>
     {% endif %}
 
     <button class="mt-6 py-4 px-8 text-lg bg-red-400 hover:bg-red-700 rounded-xl text-white">Submit</button>
 </form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const categorySelect = document.getElementById('id_category'); // Ensure this ID is correct based on your 'category' field ID
+        const regularSizeDiv = document.getElementById('regular_size');
+        const shoeSizeDiv = document.getElementById('shoe_size');
+
+        function updateSizeOptions() {
+            if (categorySelect.value === '5') {  // ID for 'Footwear' is 5
+                shoeSizeDiv.style.display = 'block';
+                regularSizeDiv.style.display = 'none';
+            } else {
+                shoeSizeDiv.style.display = 'none';
+                regularSizeDiv.style.display = 'block';
+            }
+        }
+
+        // Set initial visibility based on current category value
+        updateSizeOptions();
+
+        // Update visibility on category change
+        categorySelect.addEventListener('change', updateSizeOptions);
+    });
+</script>
+
 {% endblock %}

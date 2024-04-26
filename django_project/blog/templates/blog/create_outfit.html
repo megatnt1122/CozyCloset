@@ -1,54 +1,56 @@
 {% extends "blog/base.html" %}
 {% block content %}
-    <div class="outfit-creation-container">
-        <h2 style="text-align: center;">Create Your Outfit</h2>
-        <form method="post" id="outfitForm" class="outfit-form">
-            {% csrf_token %}
-            
-            <!-- Hidden form fields to store selected item IDs -->
-            <input type="hidden" name="top" id="selectedTop">
-            <input type="hidden" name="bottoms" id="selectedBottoms">
-            <input type="hidden" name="footwear" id="selectedFootwear">
-            <input type="hidden" name="accessory" id="selectedAccessory" value="">
-            <input type="hidden" name="outerwear" id="selectedOuterwear" value="">
-
-            <!-- Template sections for each category of clothing -->
-            <div class="clothing-categories">
-                {% for category, items in categories.items %}
-                    <div id="{{category}}Selection" class="clothingSelection">
-                        <h3>{{ category|capfirst }}</h3>
-                        <div class="clothing-items-container">
-                            {% if items %}
-                                {% for item in items %}
-                                    <div class="clothingItem" data-category="{{ category }}" data-id="{{ item.id }}" onclick="selectItem(this);">
-                                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="clothingImage">
-                                        <div class="itemName">{{ item.name }}</div>
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                <p class="no-items">No items available.</p>
-                            {% endif %}
-                        </div>
+<div class="outfit-creation-container">
+    <h2 style="text-align: center;">Create Your Outfit</h2>
+    <button onclick="generateFilteredRandomOutfit()" class="random-btn" style="position: absolute; right: 20px; top: 20px;">Random Outfit</button>
+    <button onclick="getWeatherAndDress()" class="random-btn" style="position: absolute; right: 20px; top: 60px;">Dress for Weather</button>
+    <form method="post" id="outfitForm" class="outfit-form">
+        {% csrf_token %}
+        <input type="hidden" id="selectedTop" name="selectedTop" value="">
+        <input type="hidden" id="selectedBottoms" name="selectedBottoms" value="">
+        <input type="hidden" id="selectedFootwear" name="selectedFootwear" value="">
+        <input type="hidden" id="selectedAccessory" name="selectedAccessory" value="">
+        <input type="hidden" id="selectedOuterwear" name="selectedOuterwear" value="">
+        <div class="clothing-categories">
+            {% for category, items in categories.items %}
+            <div id="{{category}}Selection" class="clothingSelection">
+                <h3 class="category-heading">{{ category|capfirst }}</h3>
+                <select id="{{category}}ColorFilter" class="color-filter">
+                    <option value="">Any Color</option>
+                    <!-- Options will be added by JavaScript -->
+                </select>
+                <div class="clothing-items-container">
+                    {% for item in items %}
+                    <div class="clothingItem" data-category="{{ category }}" data-id="{{ item.id }}" data-color="{{ item.color.color }}" onclick="selectItem(this);">
+                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="clothingImage">
+                        <div class="itemName">{{ item.name }}</div>
                     </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
-            <div class="centered">
-                <button type="submit" class="btn btn-primary">Save Outfit</button>
-            </div>
-        </form>
-    </div>
+            {% endfor %}
+        </div>
+        <div class="centered">
+            <button type="submit" class="btn btn-primary">Save Outfit</button>
+        </div>
+    </form>
+</div>
 
-    <style>
+<style>
     .outfit-creation-container {
         max-width: 960px;
         margin: 20px auto;
         padding: 20px;
+        position: relative;
     }
 
-    .outfit-form {
-        background-color: transparent;
-        padding: 20px;
-        border-radius: 8px;
+    .category-heading {
+        font-size: 24px;
+        color: #007bff;
+        font-weight: bold;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
     }
 
     .clothingSelection {
@@ -74,11 +76,11 @@
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         transition: all 0.3s ease;
         overflow: hidden;
-        width: 180px; /* Standardized width for uniformity */
-        height: 260px; /* Standardized height to maintain the item size */
+        width: 180px;
+        height: 260px;
         display: flex;
         flex-direction: column;
-        justify-content: space-between; /* Distributes space evenly inside the item card */
+        justify-content: space-between;
     }
 
     .clothingItem.selected {
@@ -89,11 +91,11 @@
     }
 
     .clothingImage {
-        height: 2000px; /* Fixed height to standardize image sizes */
-        width: 150px; /* Fixed width to standardize image sizes */
-        object-fit: cover; /* Ensures images cover the area without distorting */
-        margin: 10px auto; /* Centering the image */
-        border-radius: 8px; /* Optional: Adds rounded corners to the images */
+        height: 200px;
+        width: 150px;
+        object-fit: cover;
+        margin: 10px auto;
+        border-radius: 8px;
     }
 
     .itemName {
@@ -110,6 +112,22 @@
         color: #6c757d;
     }
 
+    .random-btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: 0.25rem;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.15s ease-in-out;
+    }
+
+    .random-btn:hover {
+        background-color: #0056b3;
+    }
+
     .btn-primary {
         margin-top: 20px;
         padding: 10px 30px;
@@ -123,20 +141,70 @@
     }
 </style>
 
+<script>
+function selectItem(element) {
+    const category = element.dataset.category;
+    document.querySelectorAll(`.clothingItem[data-category="${category}"]`).forEach(item => {
+        item.classList.remove('selected');
+    });
+    element.classList.add('selected');
+    const selectedInputId = 'selected' + category.charAt(0).toUpperCase() + category.slice(1);
+    console.log("Updating input for category:", category, "Input ID:", selectedInputId);
+    document.getElementById(selectedInputId).value = element.dataset.id;
+}
 
+function generateFilteredRandomOutfit() {
+    console.log("Starting to generate a random outfit...");
+    const categories = ['top', 'bottoms', 'footwear', 'accessory', 'outerwear'];
+    categories.forEach(category => {
+        console.log("Processing category:", category);
+        const colorSelect = document.getElementById(category + 'ColorFilter');
+        const selectedColor = colorSelect ? colorSelect.value : "";
+        console.log("Selected color for", category, ":", selectedColor);
 
-
-    <script>
-        function selectItem(element) {
-            const category = element.dataset.category;
-            document.querySelectorAll('.clothingItem[data-category="' + category + '"]').forEach(item => {
-                item.classList.remove('selected');
-            });
-            element.classList.add('selected');
-            document.getElementById('selected' + category.charAt(0).toUpperCase() + category.slice(1)).value = element.dataset.id;
-            console.log('Category:', category);  // Should log 'top'
-            console.log('Computed ID:', 'selected' + category.charAt(0).toUpperCase() + category.slice(1));  // Should log 'selectedTop'
-            console.log('Element:', document.getElementById('selected' + category.charAt(0).toUpperCase() + category.slice(1)));  // Should log the HTML element, not null
+        const itemsContainer = document.getElementById(category + 'Selection');
+        if (!itemsContainer) {
+            console.error("Missing items container for", category);
+            return; // Skip this category if its container is missing
         }
-    </script>
+        let items = itemsContainer.querySelectorAll('.clothingItem');
+        console.log("Initial items count for", category, ":", items.length);
+
+        if (selectedColor) {
+            items = Array.from(items).filter(item => item.dataset.color.trim().toLowerCase() === selectedColor.trim().toLowerCase());
+            console.log("Filtered items count for", category, ":", items.length);
+        }
+
+        if (items.length) {
+            const randomItem = items[Math.floor(Math.random() * items.length)];
+            selectItem(randomItem);
+        } else {
+            console.log("No items available in", category, "with the selected color:", selectedColor);
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    console.log("Page fully loaded, setting up categories...");
+    const categoryContainers = document.querySelectorAll('.clothingSelection');
+    categoryContainers.forEach(container => {
+        const category = container.id.replace('Selection', '');
+        console.log("Setting up color filters for", category);
+        const colorSet = new Set();
+        container.querySelectorAll('.clothingItem').forEach(item => {
+            colorSet.add(item.dataset.color.trim().toLowerCase());
+        });
+
+        const colorSelect = document.getElementById(category + 'ColorFilter');
+        colorSelect.disabled = !colorSet.size;
+        colorSet.forEach(color => {
+            const option = document.createElement('option');
+            option.value = color;
+            option.textContent = color.charAt(0).toUpperCase() + color.slice(1);
+            colorSelect.appendChild(option);
+        });
+    });
+});
+</script>
+
 {% endblock %}

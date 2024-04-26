@@ -25,7 +25,7 @@
 		    method="POST">
 			{% csrf_token %}
 			{% if user.is_authenticated %}
-				{% if liked %}
+				{% if user in post.likes.all %}
 					<button type="submit", name="post_id" value="{{ post.id }}">
 					<img src="https://cdn-icons-png.flaticon.com/256/81/81250.png" alt="Unlike button" style="width:25px; height:25px;">
 					</button>

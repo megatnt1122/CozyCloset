@@ -6,7 +6,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic.edit import UpdateView
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import (
     ListView,
     DetailView,
@@ -18,9 +20,11 @@ from .models import Post
 from .forms import *
 from .models import *
 from django.db.models import Q
+from collections import defaultdict
 
+@login_required
 def LikeView(request, pk):
-    post = get_object_or_404(Post, id=request.POST.get('post_id'))
+    post = get_object_or_404(Post, id=pk)
     liked = False
     if post.likes.filter(id=request.user.id).exists():
         post.likes.remove(request.user)
@@ -29,8 +33,7 @@ def LikeView(request, pk):
         post.likes.add(request.user)
         liked = True
     
-    return HttpResponseRedirect(reverse('blog-home')) #ThIS IS PROBABLY WRONG
-    #return HttpResponseRedirect(reverse('post-detail', args=[str(pk)])) #ThIS IS PROBABLY WRONG
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 @login_required
 def CommentLikeView(request, comment_id):
@@ -40,7 +43,8 @@ def CommentLikeView(request, comment_id):
             comment.likes.remove(request.user)
         else:
             comment.likes.add(request.user)
-    return HttpResponseRedirect(reverse('blog-home'))
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
 def home(request):
     context = {
         'posts': Post.objects.all()
@@ -54,6 +58,17 @@ class PostListView(ListView):
     context_object_name = 'posts'
     ordering = ['-date_posted']
     paginate_by = 5
+
+    def get_queryset(self):
+        # Check if the user is authenticated before filtering posts
+        if self.request.user.is_authenticated:
+            # Get a list of user IDs that the current user is following
+            followed_user_ids = Follow.objects.filter(follower=self.request.user).values_list('followed_id', flat=True)
+            # Filter the queryset to return only the posts from followed users
+            return super().get_queryset().filter(author_id__in=followed_user_ids)
+        else:
+            # If the user is not authenticated, return an empty queryset
+            return Post.objects.none()
 
 
 class UserPostListView(ListView):
@@ -89,16 +104,25 @@ class AddCommentView(CreateView):
     model = Comment
     form_class = CommentForm
     template_name = 'blog/add_comment.html'
-    #fields = '__all__'
+
     def form_valid(self, form):
+        # Set the post reference on the new comment instance
         form.instance.post_id = self.kwargs['pk']
-        form.instance.name = self.request.user
+        # Attach the logged-in user as the commenter
+        form.instance.name = self.request.user  # Ensure your Comment model's 'name' field can accept a User instance
         return super().form_valid(form)
-    success_url = reverse_lazy('blog-home')
+
+    def get_context_data(self, *args, **kwargs):
+        # Corrected usage of super to refer to this class, AddCommentView
+        extra_context = super(AddCommentView, self).get_context_data(*args, **kwargs)
+        # Retrieve the post using the primary key and add its comments to the context
+        post = get_object_or_404(Post, id=self.kwargs['pk'])
+        extra_context['comments'] = Comment.objects.filter(post=post)
+        return extra_context
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
-    fields = ['content']
+    fields = ['title', 'content', 'image']
 
     def dispatch(self, request, *args, **kwargs):
         self.item = kwargs.get('itemid', "")
@@ -126,7 +150,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
-    fields = ['content']
+    fields = ['title', 'content', 'image']
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -169,7 +193,6 @@ class ClosetCreateView(LoginRequiredMixin, CreateView):
         form.instance.closetUser = self.request.user
         return super().form_valid(form)
 
-# The view for editing a closet
 class ClosetUpdateView(LoginRequiredMixin, UpdateView):
     model = Closet
     fields = ['name', 'is_public']
@@ -180,6 +203,20 @@ class ClosetUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_object(self):
         return get_object_or_404(Closet, id=self.kwargs.get('closetid'), closetUser=self.request.user)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'redirect_url': self.get_success_url()})
+        else:
+            return response
+
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse(form.errors, status=400)
+        else:
+            return response
 
 
 def about(request):
@@ -222,21 +259,39 @@ def openMyCloset(request, closetid=None):
     clothes_in_closet = closetClothes.objects.filter(closet=closet)
     empty = not clothes_in_closet.exists()
     
-    # Organize clothes by category without using defaultdict
+    # Define a mapping from specific categories to general categories
+    category_mapping = {
+        'Long Sleeve': 'Tops',
+        'Short Sleeve': 'Tops',
+        'Pants': 'Bottoms',
+        'Shorts': 'Bottoms',
+        'Footwear': 'Footwear',
+        'Outerwear': 'Outerwear',
+        'Accessories': 'Accessories',
+    }
+    
+    # Organize clothes by general categories using the mapping
     categorized_clothes = {}
     for closet_item in clothes_in_closet:
-        category = closet_item.clothing_item.category.category
-        if category not in categorized_clothes:
-            categorized_clothes[category] = [closet_item.clothing_item]
+        specific_category = closet_item.clothing_item.category.category
+        general_category = category_mapping.get(specific_category, specific_category)  # Default to specific if not mapped
+        if general_category not in categorized_clothes:
+            categorized_clothes[general_category] = [closet_item.clothing_item]
         else:
-            categorized_clothes[category].append(closet_item.clothing_item)
+            categorized_clothes[general_category].append(closet_item.clothing_item)
+
+    # Define category order
+    category_order = ['Tops', 'Bottoms', 'Footwear', 'Outerwear', 'Accessories']
+
+    # Sort the categories based on the predefined order
+    sorted_categorized_clothes = {category: categorized_clothes[category] for category in category_order if category in categorized_clothes}
 
     outfits = [o.outfit for o in closetOutfits.objects.filter(closet=closet)]
     
     context = {
         'closet': closet,
         'username': username,
-        'categorized_clothes': categorized_clothes,
+        'categorized_clothes': sorted_categorized_clothes,
         'title': closet.name,
         'empty': empty,
         'user_outfits': outfits
@@ -320,11 +375,11 @@ def createOutfit(request, closetid=None):
 
     if request.method == 'POST':
         # Extract item IDs from POST data
-        top_id = request.POST.get('top')
-        bottoms_id = request.POST.get('bottoms')
-        footwear_id = request.POST.get('footwear')
-        accessory_id = request.POST.get('accessory')  # These are optional, so they might be empty strings.
-        outerwear_id = request.POST.get('outerwear')
+        top_id = request.POST.get('selectedTop')
+        bottoms_id = request.POST.get('selectedBottoms')
+        footwear_id = request.POST.get('selectedFootwear')
+        accessory_id = request.POST.get('selectedAccessory') 
+        outerwear_id = request.POST.get('selectedOuterwear')
 
         # Attempt to retrieve the corresponding userClothes instances
         try:
@@ -342,7 +397,7 @@ def createOutfit(request, closetid=None):
             closetOutfit = closetOutfits(closet=closet, outfit=outfit, user=request.user)
             closetOutfit.save()
 
-            messages.success(request, "Outfit created successfully!")
+            messages.success(request, ' ')
             return redirect(reverse('open-closet', kwargs={'closetid': closetid}))
 
         except userClothes.DoesNotExist:
@@ -352,35 +407,60 @@ def createOutfit(request, closetid=None):
 
     # If not POST method or if there was an error, re-display the form.
     categories = {
-        'top': userClothes.objects.filter(category__category='Top', bloguser=request.user, closetclothes__closet=closet),
-        'bottoms': userClothes.objects.filter(category__category='Bottoms', bloguser=request.user, closetclothes__closet=closet),
-        'footwear': userClothes.objects.filter(category__category='Footwear', bloguser=request.user, closetclothes__closet=closet),
-        'accessories': userClothes.objects.filter(category__category='Accessory', bloguser=request.user, closetclothes__closet=closet),
-        'outerwear': userClothes.objects.filter(category__category='Outerwear', bloguser=request.user, closetclothes__closet=closet)
+        'top': userClothes.objects.filter(
+            Q(category__category='Long Sleeve') | Q(category__category='Short Sleeve'), 
+            bloguser=request.user, 
+            closetclothes__closet=closet
+        ),
+        'bottoms': userClothes.objects.filter(
+            Q(category__category='Pants') | Q(category__category='Shorts'), 
+            bloguser=request.user, 
+            closetclothes__closet=closet
+        ),
+        'footwear': userClothes.objects.filter(
+            category__category='Footwear', 
+            bloguser=request.user, 
+            closetclothes__closet=closet
+        ),
+        'accessory': userClothes.objects.filter(
+            category__category='Accessory', 
+            bloguser=request.user, 
+            closetclothes__closet=closet
+        ),
+        'outerwear': userClothes.objects.filter(
+            category__category='Outerwear', 
+            bloguser=request.user, 
+            closetclothes__closet=closet
+        )
     }
 
-    return render(request, 'blog/create_outfit.html', {'categories': categories, 'closet': closet})
+    
 
+    return render(request, 'blog/create_outfit.html', {
+        'categories': categories,
+        'closet': closet
+    })
 
 
 @login_required
 def AddToCloset(request, itemid=None):
     item = userClothes.objects.get(id=itemid)
 
-    if request.POST.get("save"):
-        for c in Closet.objects.filter(closetUser=request.user):
-            if request.POST.get(str(c.id)) == "clicked":
-                adding = closetClothes(closet=c, clothing_item=item, user=request.user)
-                adding.save()
-        return redirect(reverse('my-clothes'))
-    Closets = Closet.objects.filter(closetUser=request.user)
-    closets = []
-    for c in Closets:
-        if len(closetClothes.objects.filter(closet=c, clothing_item=item, user=request.user)) == 0:
-            closets.append(c)
+    if request.method == 'POST':
+        closets_ids = [key.split('_')[1] for key in request.POST.keys() if key.startswith('closet_')]
+        for closet_id in closets_ids:
+            closet = Closet.objects.get(id=closet_id)
+            adding = closetClothes(closet=closet, clothing_item=item, user=request.user)
+            adding.save()
+
+        return redirect('my-clothes')
+
+    closets = Closet.objects.filter(closetUser=request.user).exclude(closetclothes__clothing_item=item)
+
     context = {
         'user': request.user,
         'closets': closets,
+        'item': item
     }
 
     return render(request, 'blog/AddToCloset.html', context)
@@ -427,12 +507,12 @@ def deleteCloset(request, closetid=None):
     return redirect(reverse('my-closets'))
 
 @login_required
-def deleteOutfit(request, closetid=None, outfitid=None):
-    coutfit = get_object_or_404(closetOutfits, closet=closetid, outfit=outfitid)
+def deleteOutfit(request, outfitid=None):
+    coutfit = get_object_or_404(closetOutfits, outfit=outfitid, user=request.user)
     outfit = coutfit.outfit
     coutfit.delete()
     outfit.delete()
-    return redirect(reverse('open-closet', kwargs={'closetid': closetid}))
+    return JsonResponse({'status': 'success', 'message': 'Outfit deleted'})
 
 class SearchView(ListView):
     model = User
@@ -446,6 +526,18 @@ class SearchView(ListView):
             queryset = queryset.filter(username__icontains=search_query)
         return queryset
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        users = context['users']
+        current_user = self.request.user
+        users = [user for user in users if user != current_user]
+        following_status = {}
+        follows = Follow.objects.filter(follower=current_user, followed__in=users)
+        for user in users:
+            following_status[user] = follows.filter(followed=user).exists()
+        context['following_status'] = following_status
+        return context
+
 @login_required
 def view_outfits(request):
     user_outfits = Outfit.objects.filter(user=request.user)  # Get all outfits for the logged-in user
@@ -455,7 +547,7 @@ def view_outfits(request):
 def new_message(request, user_pk):
     recipient = get_object_or_404(User, pk=user_pk)
     if recipient == request.user:
-        return redirect('blog/why.html')  # Redirect to prevent messaging oneself.
+        return redirect('blog-home')  # Redirect to prevent messaging oneself.
 
     # Check if there is an existing conversation between the users
     existing_convos = Convo.objects.filter(members=request.user).filter(members=recipient).distinct()
@@ -471,6 +563,7 @@ def new_message(request, user_pk):
             convo_message.conversing = convo
             convo_message.created_by = request.user
             convo_message.save()
+            convo.last_message = convo_message.content
             return redirect('view-message', pk=convo.id)  # Ensure this redirect is correct
     else:
         form = DirectMessagingForm()
@@ -496,7 +589,7 @@ def detailM(request, pk):
             convo_message.conversing = convo
             convo_message.created_by = request.user
             convo_message.save()
-
+            convo.last_message = convo_message.content
             convo.save()
             return redirect('view-message',pk=pk)
     else:
@@ -508,5 +601,24 @@ def detailM(request, pk):
         'form': form
     })
     
-def why(request):
-    return render(request, 'blog/why.html')
+@method_decorator(login_required, name='dispatch')
+class FollowUserView(View):
+    def post(self, request, username):
+        user_to_follow = get_object_or_404(User, username=username)
+        follow, created = Follow.objects.get_or_create(follower=request.user, followed=user_to_follow)
+        if created:
+            # Optionally send a notification to `user_to_follow`, or do any other additional actions
+            pass
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+@method_decorator(login_required, name='dispatch')
+class UnfollowUserView(View):
+    def post(self, request, username):
+        user_to_unfollow = get_object_or_404(User, username=username)
+        try:
+            follow = Follow.objects.get(follower=request.user, followed=user_to_unfollow)
+            follow.delete()
+            # Optionally add some kind of notification that they've unfollowed
+        except Follow.DoesNotExist:
+            pass
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))

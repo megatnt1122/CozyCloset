@@ -29,7 +29,7 @@ class Item(models.Model):
     category = models.ForeignKey(Category, related_name='items', on_delete=models.CASCADE,default=0)
     name = models.CharField(max_length=255)
     size = models.ForeignKey(Size, related_name='items', on_delete=models.CASCADE,default=1)
-    shoeSize = models.ForeignKey(ShoeSize, related_name='items', on_delete=models.CASCADE,default=47)
+    shoeSize = models.ForeignKey(ShoeSize, related_name='items', on_delete=models.CASCADE, null=True)
     description = models.TextField(blank=True, null=True)
     price = models.FloatField()
     image = models.ImageField(upload_to='item_images', blank=True, null=True)
@@ -39,4 +39,3 @@ class Item(models.Model):
 
     def __str__(self):
         return self.name
-    

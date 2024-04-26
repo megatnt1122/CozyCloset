@@ -58,7 +58,7 @@
                                 <p class="message-timestamp">{{ convo.modified_at|date:"M d, Y P" }}</p>
                             </div>
                             <!-- Add a placeholder for the latest message preview if available -->
-                            <p class="message-preview">{{ convo.last_message.content }}</p>
+                            <p class="message-preview">{{ convo.last_message }}</p>
                         </div>
                     </a>
                 {% endif %}
