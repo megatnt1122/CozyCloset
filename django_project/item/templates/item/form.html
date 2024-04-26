@@ -9,21 +9,31 @@
     {% csrf_token %}
     
     <div class="space-y-4">
+        Category:
         {{ form.category }}
 
         <!-- Regular Size Dropdown -->
         <div id="regular_size" style="display: none;">
+            Size:
             {{ form.size }}
         </div>
         
         <!-- Shoe Size Dropdown -->
         <div id="shoe_size" style="display: none;">
+            Size:
             {{ form.shoeSize }}
         </div>
         
+        Name:
         {{ form.name }}
+
+        Description:
         {{ form.description }}
+
+        Price:
         {{ form.price }}
+
+        Image:
         {{ form.image }}
     </div>
 
