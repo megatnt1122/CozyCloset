@@ -59,7 +59,7 @@ class PostListView(ListView):
     ordering = ['-date_posted']
     paginate_by = 5
 
-    def get_queryset(self):
+    '''def get_queryset(self):
         # Check if the user is authenticated before filtering posts
         if self.request.user.is_authenticated:
             # Get a list of user IDs that the current user is following
@@ -68,7 +68,7 @@ class PostListView(ListView):
             return super().get_queryset().filter(author_id__in=followed_user_ids)
         else:
             # If the user is not authenticated, return an empty queryset
-            return Post.objects.none()
+            return Post.objects.none()'''
 
 
 class UserPostListView(ListView):

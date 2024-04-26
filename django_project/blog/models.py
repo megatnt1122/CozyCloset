@@ -14,11 +14,11 @@ class Post(models.Model):
     def total_likes(self):
         return self.likes.count()
     
-    def __str__(self):
-        return self.title
+    #def __str__(self):
+        #return self.title
     
     def save(self, *args, **kwargs):
-        self.name = self.title.title()
+        #self.name = self.title.title()
         super(Post, self).save(*args, **kwargs)
         try:
             img = Image.open(self.image.path)
