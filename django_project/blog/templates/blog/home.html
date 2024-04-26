@@ -16,7 +16,7 @@
             <!--<h2><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>-->
 			{% if post.image.url != undefined %}
 				<a href={{post.image.url}} target="_blank">
-				<img class="image" src="{{ post.image.url }}" target="_blank" style="max-width:800px; max-height:800px;">
+				<img class="image landscape" src="{{ post.image.url }}" target="_blank" style="max-width:800px; max-height:800px;">
 				</a>
 			{% endif %}
 			<p class="article-content">{{ post.content }}</p>
@@ -25,7 +25,7 @@
 		    method="POST">
 			{% csrf_token %}
 			{% if user.is_authenticated %}
-				{% if liked %}
+				{% if user in post.likes.all %}
 					<button type="submit", name="post_id" value="{{ post.id }}">
 					<img src="https://cdn-icons-png.flaticon.com/256/81/81250.png" alt="Unlike button" style="width:25px; height:25px;">
 					</button>
@@ -38,7 +38,7 @@
 				<small><a href="{% url 'login' %}">Login</a>
 				Login to like</small>
 			{% endif %}
-			{{ total_likes }} Likes
+			{{ post.total_likes }} Likes
 			<a class="navbar-brand mr-4" href="{% url 'add_comment' post.pk %}"><img class="logo" src="/media/OIP.jpg" width="25" height="25" alt="Logo"></a>
 		  </form>
 		  <br/><br/>
@@ -49,10 +49,18 @@
 			No Comments Yet...
 		  {% else %}
 		 
-				{% for comment in post.comments.all|slice:"1:3" %}
+				{% for comment in post.comments.all|slice:"0:2" %}
 					<strong>
 					{{ comment.name }} -
 					{{ comment.date_added }}
+					
+					<a href="{% url 'comment_like' comment.id %}">
+					<button>{{ comment.liked }}
+					<img src="https://cdn-icons-png.flaticon.com/512/126/126473.png " alt="Like button" style="width:25px; height:25px;">
+					</button>
+					</a>
+				<span>Likes: {{ comment.likes.count }}</span>
+					
 					</strong>
 					<br/>
 					{{ comment.body }}

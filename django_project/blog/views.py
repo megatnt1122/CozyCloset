@@ -22,8 +22,9 @@ from .models import *
 from django.db.models import Q
 from collections import defaultdict
 
+@login_required
 def LikeView(request, pk):
-    post = get_object_or_404(Post, id=request.POST.get('post_id'))
+    post = get_object_or_404(Post, id=pk)
     liked = False
     if post.likes.filter(id=request.user.id).exists():
         post.likes.remove(request.user)
@@ -32,7 +33,17 @@ def LikeView(request, pk):
         post.likes.add(request.user)
         liked = True
     
-    return HttpResponseRedirect(reverse('post-detail', args=[str(pk)])) #ThIS IS PROBABLY WRONG
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+@login_required
+def CommentLikeView(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    if request.user.is_authenticated:
+        if comment.likes.filter(id=request.user.id).exists():
+            comment.likes.remove(request.user)
+        else:
+            comment.likes.add(request.user)
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 def home(request):
     context = {
@@ -49,11 +60,15 @@ class PostListView(ListView):
     paginate_by = 5
 
     def get_queryset(self):
-        # Get the IDs of the users followed by the current user
-        followed_user_ids = Follow.objects.filter(follower=self.request.user).values_list('followed_id', flat=True)
-        # Filter posts by authors who are followed by the current user
-        queryset = super().get_queryset().filter(author_id__in=followed_user_ids)
-        return queryset
+        # Check if the user is authenticated before filtering posts
+        if self.request.user.is_authenticated:
+            # Get a list of user IDs that the current user is following
+            followed_user_ids = Follow.objects.filter(follower=self.request.user).values_list('followed_id', flat=True)
+            # Filter the queryset to return only the posts from followed users
+            return super().get_queryset().filter(author_id__in=followed_user_ids)
+        else:
+            # If the user is not authenticated, return an empty queryset
+            return Post.objects.none()
 
 
 class UserPostListView(ListView):
@@ -89,12 +104,21 @@ class AddCommentView(CreateView):
     model = Comment
     form_class = CommentForm
     template_name = 'blog/add_comment.html'
-    #fields = '__all__'
+
     def form_valid(self, form):
+        # Set the post reference on the new comment instance
         form.instance.post_id = self.kwargs['pk']
-        form.instance.name = self.request.user
+        # Attach the logged-in user as the commenter
+        form.instance.name = self.request.user  # Ensure your Comment model's 'name' field can accept a User instance
         return super().form_valid(form)
-    success_url = reverse_lazy('blog-home')
+
+    def get_context_data(self, *args, **kwargs):
+        # Corrected usage of super to refer to this class, AddCommentView
+        extra_context = super(AddCommentView, self).get_context_data(*args, **kwargs)
+        # Retrieve the post using the primary key and add its comments to the context
+        post = get_object_or_404(Post, id=self.kwargs['pk'])
+        extra_context['comments'] = Comment.objects.filter(post=post)
+        return extra_context
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
@@ -504,20 +528,13 @@ class SearchView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Get the list of users
         users = context['users']
-        # Get the current user
         current_user = self.request.user
-        # Remove the current user from the list
         users = [user for user in users if user != current_user]
-        # Create a dictionary to store following status
         following_status = {}
-        # Retrieve follow relationships for the current user
         follows = Follow.objects.filter(follower=current_user, followed__in=users)
-        # Populate following_status dictionary
         for user in users:
             following_status[user] = follows.filter(followed=user).exists()
-        # Add following_status to the context
         context['following_status'] = following_status
         return context
 
@@ -530,7 +547,7 @@ def view_outfits(request):
 def new_message(request, user_pk):
     recipient = get_object_or_404(User, pk=user_pk)
     if recipient == request.user:
-        return redirect('blog/why.html')  # Redirect to prevent messaging oneself.
+        return redirect('blog-home')  # Redirect to prevent messaging oneself.
 
     # Check if there is an existing conversation between the users
     existing_convos = Convo.objects.filter(members=request.user).filter(members=recipient).distinct()
@@ -546,6 +563,7 @@ def new_message(request, user_pk):
             convo_message.conversing = convo
             convo_message.created_by = request.user
             convo_message.save()
+            convo.last_message = convo_message.content
             return redirect('view-message', pk=convo.id)  # Ensure this redirect is correct
     else:
         form = DirectMessagingForm()
@@ -571,7 +589,7 @@ def detailM(request, pk):
             convo_message.conversing = convo
             convo_message.created_by = request.user
             convo_message.save()
-
+            convo.last_message = convo_message.content
             convo.save()
             return redirect('view-message',pk=pk)
     else:
