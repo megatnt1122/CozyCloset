@@ -1,5 +1,6 @@
 {% extends "blog/base.html" %}
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <div class="outfit-creation-container">
     <h2 style="text-align: center;">Create Your Outfit</h2>
     <button onclick="generateFilteredRandomOutfit()" class="random-btn" style="position: absolute; right: 20px; top: 20px;">Random Outfit</button>
@@ -13,21 +14,23 @@
         <input type="hidden" id="selectedOuterwear" name="selectedOuterwear" value="">
         <div class="clothing-categories">
             {% for category, items in categories.items %}
-            <div id="{{category}}Selection" class="clothingSelection">
-                <h3 class="category-heading">{{ category|capfirst }}</h3>
-                <select id="{{category}}ColorFilter" class="color-filter">
-                    <option value="">Any Color</option>
-                    <!-- Options will be added by JavaScript -->
-                </select>
-                <div class="clothing-items-container">
-                    {% for item in items %}
-                    <div class="clothingItem" data-category="{{ category }}" data-id="{{ item.id }}" data-color="{{ item.color.color }}" onclick="selectItem(this);">
-                        <img src="{{ item.image.url }}" alt="{{ item.name }}" class="clothingImage">
-                        <div class="itemName">{{ item.name }}</div>
+                {% if items %}
+                <div id="{{category}}Selection" class="clothingSelection">
+                    <h3 class="category-heading">{{ category|capfirst }}</h3>
+                    <select id="{{category}}ColorFilter" class="color-filter">
+                        <option value="">Any Color</option>
+                        <!-- Options will be added by JavaScript -->
+                    </select>
+                    <div class="clothing-items-container">
+                        {% for item in items %}
+                        <div class="clothingItem" data-category="{{ category }}" data-id="{{ item.id }}" data-color="{{ item.color.color }}" onclick="selectItem(this);">
+                            <img src="{{ item.image.url }}" alt="{{ item.name }}" class="clothingImage">
+                            <div class="itemName">{{ item.name }}</div>
+                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
-            </div>
+                {% endif %}
             {% endfor %}
         </div>
         <div class="centered">
@@ -35,7 +38,6 @@
         </div>
     </form>
 </div>
-
 <style>
     .outfit-creation-container {
         max-width: 960px;
@@ -46,11 +48,14 @@
 
     .category-heading {
         font-size: 24px;
-        color: #007bff;
-        font-weight: bold;
-        margin-bottom: 20px;
-        text-transform: uppercase;
-        text-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+        color: #f0f0f0;  /* Light text color for visibility on dark backgrounds */
+        background-color: #444444;  /* Dark gray background */
+        padding: 10px 0;
+        margin-top: 30px;
+        border-top: 3px solid #666666;  /* Darker gray border for a nice touch */
+        text-align: center;
+        width: 100%;
+        box-shadow: 0px 2px 5px rgba(0,0,0,0.5);  /* Soft shadow for depth */
     }
 
     .clothingSelection {
@@ -122,6 +127,7 @@
         border: none;
         cursor: pointer;
         transition: background-color 0.15s ease-in-out;
+
     }
 
     .random-btn:hover {
@@ -139,6 +145,28 @@
     .centered {
         text-align: center;
     }
+
+    /* Dropdown styles */
+    .color-filter {
+        width: 100%; /* Full width of the container */
+        padding: 8px 10px;
+        font-size: 16px; /* Larger font size for better readability */
+        border: 2px solid #ccc; /* Subtle border */
+        border-radius: 8px; /* Rounded corners */
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* Inner shadow for depth */
+        appearance: none; /* Remove default styling */
+        background-image: url('https://cdn-icons-png.flaticon.com/512/32/32195.png'); /* Custom arrow icon */
+        background-repeat: no-repeat;
+        background-position: right 10px center; /* Position the arrow icon */
+        background-size: 16px; /* Size of the arrow icon */
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    /* Hover and focus effects for dropdowns */
+    .color-filter:hover, .color-filter:focus {
+        border-color: #007bff; /* Highlight border on hover/focus */
+        box-shadow: 0 0 8px rgba(0,123,255,0.5); /* Glowing effect for emphasis */
+    }
 </style>
 
 <script>
@@ -149,62 +177,86 @@ function selectItem(element) {
     });
     element.classList.add('selected');
     const selectedInputId = 'selected' + category.charAt(0).toUpperCase() + category.slice(1);
-    console.log("Updating input for category:", category, "Input ID:", selectedInputId);
     document.getElementById(selectedInputId).value = element.dataset.id;
 }
 
-function generateFilteredRandomOutfit() {
-    console.log("Starting to generate a random outfit...");
-    const categories = ['top', 'bottoms', 'footwear', 'accessory', 'outerwear'];
-    categories.forEach(category => {
-        console.log("Processing category:", category);
-        const colorSelect = document.getElementById(category + 'ColorFilter');
-        const selectedColor = colorSelect ? colorSelect.value : "";
-        console.log("Selected color for", category, ":", selectedColor);
-
-        const itemsContainer = document.getElementById(category + 'Selection');
-        if (!itemsContainer) {
-            console.error("Missing items container for", category);
-            return; // Skip this category if its container is missing
-        }
-        let items = itemsContainer.querySelectorAll('.clothingItem');
-        console.log("Initial items count for", category, ":", items.length);
-
-        if (selectedColor) {
-            items = Array.from(items).filter(item => item.dataset.color.trim().toLowerCase() === selectedColor.trim().toLowerCase());
-            console.log("Filtered items count for", category, ":", items.length);
-        }
-
-        if (items.length) {
-            const randomItem = items[Math.floor(Math.random() * items.length)];
-            selectItem(randomItem);
+function filterItemsByColor(category) {
+    const colorFilter = document.getElementById(`${category}ColorFilter`).value.toLowerCase();
+    const items = document.querySelectorAll(`#${category}Selection .clothingItem`);
+    items.forEach(item => {
+        if (colorFilter === '' || item.dataset.color.toLowerCase() === colorFilter) {
+            item.style.display = 'flex';  // Show item if color matches or if filter is set to 'Any Color'
         } else {
-            console.log("No items available in", category, "with the selected color:", selectedColor);
+            item.style.display = 'none';  // Hide item if color does not match
         }
     });
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    console.log("Page fully loaded, setting up categories...");
+document.addEventListener('DOMContentLoaded', function() {
     const categoryContainers = document.querySelectorAll('.clothingSelection');
     categoryContainers.forEach(container => {
         const category = container.id.replace('Selection', '');
-        console.log("Setting up color filters for", category);
+        const colorSelect = document.getElementById(`${category}ColorFilter`);
         const colorSet = new Set();
+
         container.querySelectorAll('.clothingItem').forEach(item => {
             colorSet.add(item.dataset.color.trim().toLowerCase());
+            item.style.display = 'flex'; // Ensure all items are visible initially
         });
 
-        const colorSelect = document.getElementById(category + 'ColorFilter');
-        colorSelect.disabled = !colorSet.size;
         colorSet.forEach(color => {
             const option = document.createElement('option');
             option.value = color;
             option.textContent = color.charAt(0).toUpperCase() + color.slice(1);
             colorSelect.appendChild(option);
         });
+
+        // Set up event listener for each color filter dropdown
+        colorSelect.addEventListener('change', () => filterItemsByColor(category));
     });
 });
+
+// Function to handle form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('outfitForm');
+    form.addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent default form submission
+        
+        // Check if at least one top, bottom, and footwear item is selected
+        const topSelected = document.getElementById('selectedTop').value.trim();
+        const bottomsSelected = document.getElementById('selectedBottoms').value.trim();
+        const footwearSelected = document.getElementById('selectedFootwear').value.trim();
+
+        if (!topSelected || !bottomsSelected || !footwearSelected) {
+            // If any of the required items is not selected, show a SweetAlert2 modal
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please select at least one top, bottom, and footwear item to create an outfit.',
+            });
+            return; // Exit the function to prevent form submission
+        }
+
+        // If all required items are selected, submit the form
+        form.submit();
+    });
+});
+
+function generateFilteredRandomOutfit() {
+    console.log("Starting to generate a random outfit...");
+    const categories = ['top', 'bottoms', 'footwear', 'accessory', 'outerwear'];
+    categories.forEach(category => {
+        const items = Array.from(document.querySelectorAll(`#${category}Selection .clothingItem`))
+                           .filter(item => item.style.display !== 'none'); // Only consider visible items
+        if (items.length > 0) {
+            const randomItem = items[Math.floor(Math.random() * items.length)];
+            selectItem(randomItem);
+        } else {
+            console.log(`No items available in ${category} to match the filter.`);
+        }
+    });
+}
 </script>
+
 
 {% endblock %}

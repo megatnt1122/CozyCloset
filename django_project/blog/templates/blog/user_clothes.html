@@ -2,10 +2,35 @@
 {% block content %}
 <style type="text/css">
     .card {
-        transition: transform 0.3s ease; /* Smooth transition on hover */
+        transition: transform 0.3s ease; /* transition on hover */
+        background-color: #333333;
     }
     .card:hover {
         transform: translateY(-5px); /* Move card up slightly on hover */
+    }
+
+    .card-title {
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 18px;
+        color: white;
+    }
+
+    .card-text {
+        color: white;
+    }
+
+    .category-title {
+        font-size: 24px; 
+        color: #f0f0f0; 
+        text-transform: uppercase; 
+        background-color: #444444;
+        padding: 10px 0;
+        margin-top: 30px; 
+        border-top: 3px solid #666666;
+        text-align: center;
+        width: 100%; 
+        box-shadow: 0px 2px 5px rgba(0,0,0,0.5); 
     }
 
     /* Additional styles for filter labels */
@@ -138,18 +163,27 @@
         localStorage.setItem('color', color);
     }
 
-    // Function to retrieve filtering options from local storage and set them
     function setFilterOptions() {
-        var category = localStorage.getItem('category');
-        var style = localStorage.getItem('style');
-        var color = localStorage.getItem('color');
+        var category = localStorage.getItem('category') || ""; // Default to "" if null
+        var style = localStorage.getItem('style') || ""; // Default to "" if null
+        var color = localStorage.getItem('color') || ""; // Default to "" if null
 
         document.getElementById('category').value = category;
         document.getElementById('style').value = style;
         document.getElementById('color').value = color;
+
+        // Ensure the default "All" is selected if the values are still empty
+        if (!document.getElementById('category').value) {
+            document.getElementById('category').selectedIndex = 0;
+        }
+        if (!document.getElementById('style').value) {
+        document.getElementById('style').selectedIndex = 0;
+        }
+        if (!document.getElementById('color').value) {
+           document.getElementById('color').selectedIndex = 0;
+        }
     }
 
-    // Set filtering options when the page loads
     window.onload = function() {
         setFilterOptions();
     };

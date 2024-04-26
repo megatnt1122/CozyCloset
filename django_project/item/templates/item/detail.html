@@ -13,14 +13,15 @@
         <p class="text-gray-500"><strong>Price: $</strong>{{ item.price }}0</p>
         <p class="text-gray-500"><strong>Seller: </strong>{{ item.created_by.username }}</p>
         
-        {% if item.size.name != '--------' %}
+        {% if item.size != '--------' or item.shoeSize != '--------' %}
             <p class="text-gray-500">
-                <strong>Size: </strong>{{ item.size.name }}</p>
-        {% endif %}
-
-        {% if item.shoeSize.name != '--------' %}
-            <p class="text-gray-500">
-                <strong>Size: </strong>{{ item.shoeSize.name }}</p>
+            <strong>Size: </strong>
+            {% if item.size != '--------' %}
+                {{ item.size }}
+            {% else %}
+                {{ item.shoeSize }}
+            {% endif %}
+            </p>
         {% endif %}
         
         {% if item.description %}

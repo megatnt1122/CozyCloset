@@ -255,6 +255,7 @@ def userClosets(request, username=None):
 @login_required
 def openMyCloset(request, closetid=None):
     username = request.user.username
+    create_outfits = True
     closet = get_object_or_404(Closet, id=closetid)
     clothes_in_closet = closetClothes.objects.filter(closet=closet)
     empty = not clothes_in_closet.exists()
@@ -287,6 +288,14 @@ def openMyCloset(request, closetid=None):
     sorted_categorized_clothes = {category: categorized_clothes[category] for category in category_order if category in categorized_clothes}
 
     outfits = [o.outfit for o in closetOutfits.objects.filter(closet=closet)]
+
+    # Check if there is at least one top, bottom, and footwear item
+    has_top = 'Tops' in sorted_categorized_clothes and len(sorted_categorized_clothes['Tops']) > 0
+    has_bottom = 'Bottoms' in sorted_categorized_clothes and len(sorted_categorized_clothes['Bottoms']) > 0
+    has_footwear = 'Footwear' in sorted_categorized_clothes and len(sorted_categorized_clothes['Footwear']) > 0
+
+    if not has_top or not has_bottom or not has_footwear:
+        create_outfits = False
     
     context = {
         'closet': closet,
@@ -294,7 +303,9 @@ def openMyCloset(request, closetid=None):
         'categorized_clothes': sorted_categorized_clothes,
         'title': closet.name,
         'empty': empty,
-        'user_outfits': outfits
+        'user_outfits': outfits,
+        'closetId': closetid,
+        'create_outfits': create_outfits
     }
 
     return render(request, 'blog/open_my_closet.html', context)
@@ -489,16 +500,15 @@ def AddToPost(request, itemid=None):
 def deleteItem(request, itemid=None, closetid=None):
     # get item from database
     item = get_object_or_404(userClothes, id=itemid)
-    if closetid == None:
+    if closetid is None:
         # delete item
         item.delete()
-        #return render(request, "blog/user_clothes.html", context)
-        return redirect(reverse('my-clothes'))
+        return JsonResponse({'message': 'Item deleted successfully'})
     else:
         closet = get_object_or_404(Closet, id=closetid)
         closetitem = get_object_or_404(closetClothes, closet=closet, clothing_item=item)
         closetitem.delete()
-        return redirect(reverse('open-closet', kwargs={'closetid': closetid}))
+        return JsonResponse({'message': 'Item deleted successfully'})
 
 @login_required
 def deleteCloset(request, closetid=None):
@@ -581,6 +591,9 @@ def dm(request):
 @login_required
 def detailM(request, pk):
     convo = Convo.objects.filter(members__in=[request.user.id]).get(pk=pk)
+    
+    # Find the other user in the convo
+    recipient = convo.members.exclude(id=request.user.id).first()
 
     if request.method == 'POST':
         form = DirectMessagingForm(request.POST)
@@ -591,15 +604,16 @@ def detailM(request, pk):
             convo_message.save()
             convo.last_message = convo_message.content
             convo.save()
-            return redirect('view-message',pk=pk)
+            return redirect('view-message', pk=pk)
     else:
         form = DirectMessagingForm()
-        
 
     return render(request, 'blog/detailM.html', {
         'convo': convo,
-        'form': form
+        'form': form,
+        'recipient': recipient  # Adding recipient to the context
     })
+
     
 @method_decorator(login_required, name='dispatch')
 class FollowUserView(View):
