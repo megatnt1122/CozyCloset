@@ -22,14 +22,17 @@ class DirectMessagingForm(forms.ModelForm):
         fields = ['content',]
         widgets = {
             'content': forms.Textarea(attrs={
-                'class': 'w-full py-4 px-6 rounded-xl border'
+                'cols': 160, 'rows': 10, 'resize': 'none'
             })
         }
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['body']
-        
         widgets = {
-            'body': forms.Textarea(attrs={'class': 'form-control'})
+            'body': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'style': 'min-height: 80px; width: 100%;',  # Add this line
+                'placeholder': 'Type your comment here...'
+            })
         }

@@ -3,20 +3,67 @@
 
 {% block content %}
 <style>
-	li{
-		align-content: left;
-		font-size: 30px;
-	}
+  body {
+    font-family: 'Arial', sans-serif;
+  }
+  .form-container {
+    max-width: 600px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  h1 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  li {
+    font-size: 20px;
+    border-bottom: 1px solid #eee;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+  }
+  li:last-child {
+    border-bottom: none;
+  }
+  input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.2);
+  }
+  button {
+    background-color: #5cb85c;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+  }
+  button:hover {
+    background-color: #4cae4c;
+  }
 </style>
 
-<h1>Add Item To Your Closets:</h1>
-<form method="post" action="">
-	{% csrf_token %}
-	{% for closet in closets %}
-	<ul>
-		<li><input type="checkbox", value="clicked", name="{{closet.id}}">	{{closet.name}}</li>
-	</ul>
-	{% endfor %}
-	<button type="submit", name="save", value="save">Save</button>
-</form>
+<div class="form-container">
+  <h1>Add Item To Your Closets:</h1>
+  <form method="post" action="">
+    {% csrf_token %}
+    {% for closet in closets %}
+    <ul>
+      <li><label><input type="checkbox" value="{{ closet.id }}" name="closet_{{ closet.id }}"> {{ closet.name }}</label></li>
+    </ul>
+    {% endfor %}
+    <button type="submit" name="save" value="save">Save</button>
+  </form>
+</div>
 {% endblock %}

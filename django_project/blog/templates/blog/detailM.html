@@ -1,78 +1,115 @@
 {% extends 'blog/base.html' %}
-
 {% block title %}Message{% endblock %}
-
-{% block extra_css %}
+{% block content %}
 <style>
+    .mcontainer {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f9f9f9;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
     .message-container {
-        margin-top: 20px;
+        display: flex;
+        flex-direction: column; /* Reverse order to show latest messages at the top */
+        overflow: auto;
     }
     .message-box {
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        background-color: #f0f0f0; /* Consistent background for all messages */
+        display: flex; /* Added to allow avatar and message to display side by side */
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        max-width: 70%; /* Limit message width for readability */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        text-align: left; /* Ensure messages go left to right */
     }
     .user-message {
-        background-color: #e3f2fd; /* Light blue background for user's messages */
+        background-color: rgba(0, 123, 255, 0.5); /* Semi-transparent blue for user's messages */
+        color: black; /* White text for contrast */
         align-self: flex-end; /* Align user's message to the right */
+        text-align: left; /* Ensure text alignment for user messages */
     }
     .other-message {
+        background-color: #ffffff; /* White background for other's messages */
+        color: #333; /* Dark text for contrast */
         align-self: flex-start; /* Align other's messages to the left */
+        text-align: left; /* Ensure text alignment for other messages */
+        border: 1px solid #eee;
     }
     .message-meta {
-        font-size: 0.75rem; /* Smaller font size for metadata */
-        color: #666;
+        font-size: 0.85rem;
+        color: black;
         margin-bottom: 5px;
     }
     .message-content p {
-        word-wrap: break-word; /* Ensure long words don't overflow */
+        margin: 0; /* Remove default margins for paragraphs */
+        word-wrap: break-word;
     }
     .message-form {
         display: flex;
         align-items: center;
         margin-top: 20px;
-        background-color: #fff; /* Change as needed */
-        padding: 15px;
-        border-radius: 10px; /* Rounded corners for the form */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
     }
     .message-form textarea {
-        flex-grow: 1; /* Allow textarea to fill available space */
-        margin-right: 15px; /* Space between textarea and button */
-        border: 1px solid #ced4da; /* Standard border color */
-        border-radius: 10px; /* Rounded corners for the textarea */
-        padding: 10px; /* Padding inside the textarea */
-        height: 10px; /* Fixed height */
-        resize: none; /* Prevent resizing */
+        flex-grow: 1;
+        margin-right: 15px;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        padding: 10px;
+        resize: none;
+        height: 50px; /* Increase height for easier typing */
+        max-width: calc(100% - 100px); /* Adjust width for responsiveness */
     }
     .message-form button {
-        padding: 10px 20px; /* Padding inside the button */
-        background-color: #007bff; /* Primary button color */
-        color: white; /* Text color */
-        border: none; /* Remove border */
-        border-radius: 10px; /* Rounded corners for the button */
-        cursor: pointer; /* Cursor change to indicate clickable */
-        transition: background-color 0.2s; /* Smooth transition for hover */
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s;
     }
     .message-form button:hover {
-        background-color: #0056b3; /* Darker shade on hover */
+        background-color: #0056b3;
     }
     .text-center {
         text-align: center;
     }
+    .avatar {
+        border-radius: 50%;
+        width: 40px; /* Adjust avatar size */
+        height: 40px; /* Adjust avatar size */
+    }
+    .avatar-container {
+        display: flex;
+        align-items: flex-start;
+    }
+    .user-avatar {
+        margin-left: auto; /* Move user avatar to the right */
+        margin-right: 12px;
+    }
+    .other-avatar {
+        margin-right: 12px; /* Move other avatar to the left */
+        margin-left: auto;
+    }
 </style>
-{% endblock %}
-
-{% block content %}
-<div class="container">
-    <h1 class="mb-6 text-3xl text-center">Direct Message</h1>
+<div class="mcontainer">
+    <h1 class="mb-6 text-3xl text-center">Message</h1>
 
     <div class="message-container">
         {% for message in convo.convoMessage.all %}
             <div class="message-box {% if message.created_by == request.user %}user-message{% else %}other-message{% endif %}">
-                <p class="message-meta"><strong>{{ message.created_by.username }}</strong> @ {{ message.created_at|date:"N j, Y, P" }}</p>
-                <p>{{ message.content }}</p>
+                <div class="avatar-container">
+                    {% if message.created_by == request.user %}
+                        <img class="rounded-circle avatar user-avatar" src="{{ request.user.profile.image.url }}">
+                    {% else %}
+                        <img class="rounded-circle avatar other-avatar" src="{{ recipient.profile.image.url }}">
+                    {% endif %}
+                </div>
+                <div> <!-- Added a div to wrap the message content -->
+                    <p class="message-meta"><strong>{{ message.created_by.username }}</strong> @ {{ message.created_at|date:"N j, Y, P" }}</p>
+                    <p class="message-content">{{ message.content }}</p>
+                </div>
             </div>
         {% endfor %}
     </div>

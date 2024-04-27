@@ -51,6 +51,9 @@
 			<div class="media-body">
 			  <h2 class="account-heading">{{ user.username }}</h2>
 			  <p class="text-secondary">{{ user.email }}</p>
+			  {% if user.profile.bio != undefined %}
+			  <p class="text-secondary">My Bio: {{ user.profile.bio }}</p>
+			  {% endif %}
 			</div>
 		</div>
 		<form method="POST" enctype="multipart/form-data">

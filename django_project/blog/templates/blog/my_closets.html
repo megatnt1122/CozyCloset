@@ -59,6 +59,19 @@
     .closetnames {
         text-align: center;
     }
+
+    .create-closet-button {
+        background: transparent;
+        border: none;
+        outline: none;
+    }
+
+    .create-closet-button img {
+        display: block; /* This ensures the image takes up the full space of the button without any margins */
+        width: 200px;
+        height: 200px;
+    }
+
 </style>
 
 <h1>Your Closets:</h1>
@@ -66,22 +79,110 @@
 <div class="container">
     {% for closet in closets %}
     <li class="images">
-        <a href="/myclosets/{{ closet.id }}/">
-            <img src="/media/closet.png" width="200" height="200">
-        </a>
+        <!-- Closet Image and name -->
         <div class="button-wrapper">
+            <a href="{% url 'open-closet' closet.id %}">
+                <img src="/media/closet.png" width="200" height="200">
+            </a>
             <h3 class="closetnames">{{ closet.name }}</h3>
-            <a href="/myclosets/{{ closet.id }}/delete/">
-                <button class="delete">Delete</button>
-            </a>
-            <a href="/myclosets/{{ closet.id }}/edit/">
-                <button class="edit">Edit</button> <!-- Added edit button -->
-            </a>
+            <button class="delete" onclick="location.href='/myclosets/{{ closet.id }}/delete/'">Delete</button>
+            <!-- Trigger the modal with a button -->
+            <button type="button" class="edit" data-toggle="modal" data-target="#editClosetModal" data-closetid="{{ closet.id }}">Edit</button>
         </div>
     </li>
     {% endfor %}
-    <a href="/createcloset/">
-        <img src="/media/plus.png" width="200" height="200">
-    </a>
+    <button type="button" class="create-closet-button" data-toggle="modal" data-target="#createClosetModal" style="background: transparent; border: none; padding: 0; outline: none; box-shadow: none;">
+        <img src="/media/plus.png" alt="Add Closet" width="200" height="200">
+    </button>
+
+    <!-- Edit Closet Modal -->
+    <div class="modal fade" id="editClosetModal" tabindex="-1" role="dialog" aria-labelledby="editClosetModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <!-- Modal content will be loaded here by the JavaScript below -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Closet Modal -->
+    <div class="modal fade" id="createClosetModal" tabindex="-1" role="dialog" aria-labelledby="createClosetModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <!-- Modal content will be loaded here by the JavaScript below -->
+            </div>
+        </div>
+    </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Modal show event
+    $('#editClosetModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        var closetId = button.data('closetid'); // Extract info from data-* attributes
+        var modal = $(this);
+        
+        // Fetch and load the form for the selected closet
+        $.ajax({
+            url: `/myclosets/${closetId}/edit/`,
+            success: function(data) {
+                modal.find('.modal-content').html(data);
+            }
+        });
+    });
+
+    // Form submission event
+    $(document).on('submit', '#editClosetForm', function (event) {
+        event.preventDefault();
+        var form = $(this);
+        $.ajax({
+            type: form.attr('method'),
+            url: form.attr('action'),
+            data: form.serialize(),
+            success: function (response) {
+                if(response.success) {
+                    $('#editClosetModal').modal('hide'); // Hide the modal
+                    // You might want to refresh the page or update the page content dynamically
+                }
+            },
+            error: function (response) {
+                // Handle form errors here
+            }
+        });
+    });
+
+    // Event to load the create closet form when the create button is clicked
+    $('#createClosetModal').on('show.bs.modal', function () {
+        var modal = $(this);
+        
+        // Fetch and load the form for creating a new closet
+        $.ajax({
+            url: `/createcloset/`,  // URL for your ClosetCreateView
+            success: function(data) {
+                modal.find('.modal-content').html(data);
+            }
+        });
+    });
+    
+    // Event to handle the form submission for creating a new closet
+    $(document).on('submit', '#createClosetForm', function (event) {
+        event.preventDefault();
+        var form = $(this);
+        $.ajax({
+            type: form.attr('method'),
+            url: form.attr('action'),
+            data: form.serialize(),
+            success: function (response) {
+                if(response.success) {
+                    $('#createClosetModal').modal('hide'); // Hide the modal
+                    location.reload(); // Reload the page to reflect the new closet
+                }
+            },
+            error: function (response) {
+                // Handle form errors here
+            }
+        });
+    });
+});
+</script>
 {% endblock %}
