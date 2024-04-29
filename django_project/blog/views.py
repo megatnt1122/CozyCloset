@@ -33,7 +33,9 @@ def LikeView(request, pk):
         post.likes.add(request.user)
         liked = True
     
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    total_likes = post.likes.count()
+    
+    return JsonResponse({'liked': liked, 'total_likes': total_likes})
 
 @login_required
 def CommentLikeView(request, comment_id):
@@ -43,7 +45,8 @@ def CommentLikeView(request, comment_id):
             comment.likes.remove(request.user)
         else:
             comment.likes.add(request.user)
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    # Redirect back to the same page
+    return redirect(request.META.get('HTTP_REFERER', '/'))
 
 def home(request):
     context = {
@@ -122,7 +125,7 @@ class AddCommentView(CreateView):
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
-    fields = ['title', 'content', 'image']
+    fields = ['content', 'image']
 
     def dispatch(self, request, *args, **kwargs):
         self.item = kwargs.get('itemid', "")
@@ -150,7 +153,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
-    fields = ['title', 'content', 'image']
+    fields = ['content']
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -172,6 +175,45 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         if self.request.user == post.author:
             return True
         return False
+
+@login_required
+def userProfile(request, username):
+    user = get_object_or_404(User, username=username)
+    
+    followerscount = Follow.objects.filter(followed=user).count()
+    followingcount = Follow.objects.filter(follower=user).count()
+    status = Follow.objects.filter(follower=request.user, followed=user).exists()
+
+    # Define the UserPostListView class
+    class UserPostListView(ListView):
+        model = Post
+        template_name = 'blog/user_posts.html'  # <app>/<model>_<viewtype>.html
+        context_object_name = 'posts'
+        paginate_by = 5
+
+        def get_queryset(self):
+            # Retrieve posts by the specified user
+            return Post.objects.filter(author=user).order_by('-date_posted')
+
+    # Create an instance of the UserPostListView
+    post_list_view = UserPostListView()
+    post_list_view.request = request  # Set the request attribute
+    post_form = PostForm()
+
+    # Render the template with the context
+    context = {
+        'user': user,
+        'followerscount': followerscount,
+        'followingcount': followingcount,
+        'status': status,
+        'closets': Closet.objects.filter(closetUser=user),
+        'posts': Post.objects.filter(author=user).order_by('-date_posted'),
+        'post_list': post_list_view,  # Pass the post_list_view instance to the template
+        'form': post_form
+    }
+
+    return render(request, 'blog/user_profile.html', context)
+
 
 # the view for the upload page
 class UploadView(LoginRequiredMixin, CreateView):
@@ -316,25 +358,44 @@ def openUserCloset(request, username=None, closetname=None):
     closet = get_object_or_404(Closet, name=closetname, closetUser=user)
     clothes_in_closet = closetClothes.objects.filter(closet=closet)
     empty = not clothes_in_closet.exists()
+
+    # Define a mapping from specific categories to general categories
+    category_mapping = {
+        'Long Sleeve': 'Tops',
+        'Short Sleeve': 'Tops',
+        'Pants': 'Bottoms',
+        'Shorts': 'Bottoms',
+        'Footwear': 'Footwear',
+        'Outerwear': 'Outerwear',
+        'Accessories': 'Accessories',
+    }
     
-    # Organize clothes by category without using defaultdict
+    # Organize clothes by general categories using the mapping
     categorized_clothes = {}
     for closet_item in clothes_in_closet:
-        category = closet_item.clothing_item.category.category
-        if category not in categorized_clothes:
-            categorized_clothes[category] = [closet_item.clothing_item]
+        specific_category = closet_item.clothing_item.category.category
+        general_category = category_mapping.get(specific_category, specific_category)  # Default to specific if not mapped
+        if general_category not in categorized_clothes:
+            categorized_clothes[general_category] = [closet_item.clothing_item]
         else:
-            categorized_clothes[category].append(closet_item.clothing_item)
+            categorized_clothes[general_category].append(closet_item.clothing_item)
+
+    # Define category order
+    category_order = ['Tops', 'Bottoms', 'Footwear', 'Outerwear', 'Accessories']
+
+    # Sort the categories based on the predefined order
+    sorted_categorized_clothes = {category: categorized_clothes[category] for category in category_order if category in categorized_clothes}
 
     outfits = [o.outfit for o in closetOutfits.objects.filter(closet=closet)]
     
     context = {
         'closet': closet,
         'username': username,
-        'categorized_clothes': categorized_clothes,
+        'categorized_clothes': sorted_categorized_clothes,
         'title': closet.name,
         'empty': empty,
-        'user_outfits': outfits
+        'user_outfits': outfits,
+        'closetId': closet.id
     }
 
     return render(request, 'blog/open_user_closet.html', context)
@@ -475,26 +536,6 @@ def AddToCloset(request, itemid=None):
     }
 
     return render(request, 'blog/AddToCloset.html', context)
-
-    
-@login_required
-def AddToPost(request, itemid=None):
-    item = userClothes.objects.get(id=itemid)
-
-    if request.POST.get("save"):
-        for c in Closet.objects.filter(closetUser=request.user):
-            if request.POST.get(str(c.id)) == "clicked":
-                adding = closetClothes(closet=c, clothing_item=item, user=request.user) #Adding to Post
-                adding.save()
-    
-    Closets = Closet.objects.filter(closetUser=request.user)
-    closets = []
-    context = {
-        'user': request.user,
-        'closets': closets, #Make need to change
-    }
-
-    return render(request, 'blog/AddToPost.html', context)
 
 @login_required
 def deleteItem(request, itemid=None, closetid=None):

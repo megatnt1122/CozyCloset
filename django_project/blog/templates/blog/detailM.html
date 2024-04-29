@@ -94,7 +94,9 @@
     }
 </style>
 <div class="mcontainer">
-    <h1 class="mb-6 text-3xl text-center">Message</h1>
+    <a href="{% url 'user-profile' recipient.username %}">
+        <h1 class="mb-6 text-3xl text-center">{{ recipient.username }}</h1>
+    </a>
 
     <div class="message-container">
         {% for message in convo.convoMessage.all %}

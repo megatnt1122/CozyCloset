@@ -4,7 +4,6 @@
 <div class="outfit-creation-container">
     <h2 style="text-align: center;">Create Your Outfit</h2>
     <button onclick="generateFilteredRandomOutfit()" class="random-btn" style="position: absolute; right: 20px; top: 20px;">Random Outfit</button>
-    <button onclick="getWeatherAndDress()" class="random-btn" style="position: absolute; right: 20px; top: 60px;">Dress for Weather</button>
     <form method="post" id="outfitForm" class="outfit-form">
         {% csrf_token %}
         <input type="hidden" id="selectedTop" name="selectedTop" value="">

@@ -18,7 +18,6 @@ class Post(models.Model):
         return self.title
     
     def save(self, *args, **kwargs):
-        self.name = self.title.title()
         super(Post, self).save(*args, **kwargs)
         try:
             img = Image.open(self.image.path)

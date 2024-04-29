@@ -9,68 +9,41 @@
         padding: 20px;
         margin-bottom: 20px;
     }
-
     .user-card:hover {
         box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
     }
-
     .user-avatar {
         width: 50px;
         height: 50px;
         border-radius: 50%;
         object-fit: cover;
     }
-
     .user-info {
         margin-left: 20px;
     }
-
     .user-name {
         font-size: 20px;
         font-weight: bold;
         color: #343a40;
     }
-
     .user-actions {
+        text-align: left;
         margin-top: 10px;
     }
-
-    .message-btn, .follow-btn {
+    .message-btn {
         padding: 8px 16px;
         border-radius: 5px;
         font-size: 14px;
         font-weight: bold;
         cursor: pointer;
         transition: background-color 0.3s;
-    }
-
-    .message-btn {
         background-color: #007bff;
         color: white;
         margin-right: 10px;
     }
-
     .message-btn:hover {
         background-color: #0056b3;
         color: white;
-    }
-
-    .follow-btn {
-        background-color: #6c757d;
-        color: white;
-    }
-
-    .follow-btn:hover {
-        background-color: #5a6268;
-    }
-
-    .following-btn {
-        background-color: #dc3545;
-        color: white;
-    }
-
-    .following-btn:hover {
-        background-color: #c82333;
     }
 </style>
 <div class="container">
@@ -80,28 +53,16 @@
             {% for user, status in following_status.items %}
             <div class="user-card">
                 <div class="media">
-                    <a href="{% url 'user-closets' user.username %}">
+                    <a href="{% url 'user-profile' user.username %}">
                         <img class="user-avatar mr-3" src="{{ user.profile.image.url }}" alt="{{ user.username }}">
                     </a>
                     <div class="media-body user-info">
                         <h2 class="user-name">
-                            <a href="{% url 'user-posts' user.username %}" class="text-dark">{{ user.username }}</a>
+                            <a href="{% url 'user-profile' user.username %}" class="text-dark">{{ user.username }}</a>
                         </h2>
                         <div class="user-actions">
-                            <a href="{% url 'send-message' user.id %}" class="btn btn-primary mr-2">Message</a>
-                            <a href="{% url 'user-posts' user.username %}" class="btn btn-primary mr-2">View Posts</a>
-                            <a href="{% url 'user-closets' user.username %}" class="btn btn-primary mr-2">View Cozy Closet</a>
-                            {% if status %}
-                            <form action="{% url 'unfollow-user' user.username %}" method="post" class="d-inline-block">
-                                {% csrf_token %}
-                                <button type="submit" class="following-btn">Following</button>
-                            </form>
-                            {% else %}
-                            <form action="{% url 'follow-user' user.username %}" method="post" class="d-inline-block">
-                                {% csrf_token %}
-                                <button type="submit" class="follow-btn">Follow</button>
-                            </form>
-                            {% endif %}
+                            <button type="button" class="message-btn" onclick="location.href='{% url 'send-message' user.id %}';">Message</button>
+                            <button type="button" class="message-btn" onclick="location.href='{% url 'user-profile' user.username %}';">View Profile</button>
                         </div>
                     </div>
                 </div>

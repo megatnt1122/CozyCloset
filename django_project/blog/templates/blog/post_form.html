@@ -1,20 +1,18 @@
 {% extends "blog/base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
-	<div class="content-selection">
-		<form method="POST" enctype="multipart/form-data">
-			{% csrf_token %}
-			<fieldset class="form-group">
-				{% if shareditem.image.url != undefined %}
-				<legend class="border-bottom mb-4">Blog Post with Image -> <img src=" {{ shareditem.image.url }}"> </legend>
-				{% else %}
-				<legend class="border-bottom mb-4">Blog Post</legend>
-				{% endif %}
-				{{ form | crispy }}
-			</fieldset>
-			<div class="form-group">
-				<button class="btn btn-outline-info" type="submit">Post</button>
-			</div>
-		</form>
-	</div>
+    <div class="content-selection">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Blog Post</legend>
+                <!-- Add a hidden input field to store the shareditem's image URL -->
+                <input type="hidden" name="item_image" value="{{ shareditem.image.url }}">
+                {{ form | crispy }}
+            </fieldset>
+            <div class="form-group">
+                <button class="btn btn-outline-info" type="submit">Post</button>
+            </div>
+        </form>
+    </div>
 {% endblock content %}
