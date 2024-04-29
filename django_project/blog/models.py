@@ -141,6 +141,9 @@ class Comment(models.Model):
     def __str__(self):
         return '%s - %s' % (self.post.title, self.name)
 
+    def get_absolute_url(self):
+        return reverse('add_comment', kwargs={'pk': self.post.pk})
+
 class Follow(models.Model):
     follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)
     followed = models.ForeignKey(User, related_name='followers', on_delete=models.CASCADE)
