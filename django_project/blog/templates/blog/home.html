@@ -1,6 +1,42 @@
 {% extends "blog/base.html" %}
 {% block content %}
-	{% for post in posts %}
+<style type="text/css">
+    /* Button styles - Ensuring uniform style */
+    .switch-view-btn {
+        padding: 0.1rem 0.5rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: 0.25rem;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.15s ease-in-out;
+        margin-left: 20px; /* Apply consistently or adjust as needed */
+    }
+
+    .switch-view-btn:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-group {
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Content visibility */
+    .content {
+        display: none;
+    }
+
+    .content.active {
+        display: block;
+    }
+</style>
+
+<div id="newestSort" class="content active">
+	Sort by<button type="button" class="switch-view-btn" onclick="switchView()">Oldest First</button>
+	{% for post in posts|dictsortreversed:"date_posted" %}
 	   <center>
 		<article class="media content-section">
 			<a href="{% url 'profile' %}">
@@ -10,14 +46,9 @@
 			<div class="article-metadata">
 			  <a class="mr-2" href="{% url 'user-posts' post.author.username %}">{{ post.author }}</a>
 			  <small class="text-muted">{{ post.date_posted | date:"F d, Y" }}</small>
-			  <a class="navbar-brand mr-4" href="{% url 'post-detail' post.id %}"><img class="logo" src="/media/pencil.jpg" width="25" height="25" alt="Logo"></a>
-			  <!-- Line above is so you can update/see post details if it doesn't have a title -->
 			</div>
-            <!--<h2><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>-->
 			{% if post.image.url != undefined %}
-				<a href={{post.image.url}} target="_blank">
-				<img class="image landscape" src="{{ post.image.url }}" target="_blank" style="max-width:800px; max-height:800px;">
-				</a>
+			<img class="image landscape" src="{{ post.image.url }}" target="_blank" style="max-width:800px; max-height:800px;">
 			{% endif %}
 			<p class="article-content">{{ post.content }}</p>
 			
@@ -95,4 +126,147 @@
 		{% endif %}
 		
 	{% endif %}
-{% endblock content %}
+</div>
+
+<!-- Alternative View (View 2) -->
+<style type="text/css">
+    /* Button styles - Ensuring uniform style */
+    .switch-view-btn {
+        padding: 0.1rem 0.5rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: 0.25rem;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.15s ease-in-out;
+        margin-left: 20px; /* Apply consistently or adjust as needed */
+    }
+
+    .switch-view-btn:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-group {
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Content visibility */
+    .content {
+        display: none;
+    }
+
+    .content.active {
+        display: block;
+    }
+</style>
+<div id="oldestSort" class="content">
+	Sort by<button type="button" class="switch-view-btn" onclick="switchView()">Newest First</button>
+		{% for post in posts|dictsort:"date_posted" %}
+		   <center>
+			<article class="media content-section">
+				<a href="{% url 'profile' %}">
+				<img class="rounded-circle article-img" src="{{ post.author.profile.image.url }}">
+				</a>
+			  <div class="media-body">
+				<div class="article-metadata">
+				  <a class="mr-2" href="{% url 'user-posts' post.author.username %}">{{ post.author }}</a>
+				  <small class="text-muted">{{ post.date_posted | date:"F d, Y" }}</small>
+				</div>
+				{% if post.image.url != undefined %}
+					<img class="image landscape" src="{{ post.image.url }}" target="_blank" style="max-width:800px; max-height:800px;">
+				{% endif %}
+				<p class="article-content">{{ post.content }}</p>
+				
+					  <form action="{% url 'like_post' post.pk %}"
+				method="POST">
+				{% csrf_token %}
+				{% if user.is_authenticated %}
+					{% if liked %}
+						<button type="submit", name="post_id" value="{{ post.id }}">
+						<img src="https://cdn-icons-png.flaticon.com/256/81/81250.png" alt="Unlike button" style="width:25px; height:25px;">
+						</button>
+					{% else %}
+						<button type="submit", name="post_id" value="{{ post.id }}">
+						<img src="https://cdn-icons-png.flaticon.com/512/126/126473.png " alt="Like button" style="width:25px; height:25px;">
+						</button>
+					{% endif %}
+				{% else %}
+					<small><a href="{% url 'login' %}">Login</a>
+					Login to like</small>
+				{% endif %}
+				{{ post.total_likes }} Likes
+				<a class="navbar-brand mr-4" href="{% url 'add_comment' post.pk %}"><img class="logo" src="/media/OIP.jpg" width="25" height="25" alt="Logo"></a>
+			  </form>
+			  <br/><br/>
+			  
+			  <h2>Comments...</h2>
+			  <br/>
+			  {% if not post.comments.all %}
+				No Comments Yet...
+			  {% else %}
+			 
+					{% for comment in post.comments.all|slice:"0:2" %}
+						<strong>
+						{{ comment.name }} -
+						{{ comment.date_added }}
+						
+						<a href="{% url 'comment_like' comment.id %}">
+						<button>{{ comment.liked }}
+						<img src="https://cdn-icons-png.flaticon.com/512/126/126473.png " alt="Like button" style="width:25px; height:25px;">
+						</button>
+						</a>
+					<span>Likes: {{ comment.likes.count }}</span>
+						
+						</strong>
+						<br/>
+						{{ comment.body }}
+						<br/><br/>
+						<hr>
+						{% endfor %}
+			  {% endif %}
+			  <br/>
+			  
+			  </div>
+			</article>
+			</center>
+		{% endfor %}
+		{% if is_paginated %}
+		
+			{% if page_obj.has_previous %}
+				<a class="btn btn-outline-info mb-4" href="?page=1">First</a>
+				<a class="btn btn-outline-info mb-4" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+			{% endif %}
+			
+			{% for num in page_obj.paginator.page_range %}
+				{% if page_obj.number == num %}
+					<a class="btn btn-info mb-4" href="?page={{ num }}">{{ num }}</a>	
+				{% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+					<a class="btn btn-outline-info mb-4" href="?page={{ num }}">{{ num }}</a>
+				{% endif %}
+			{% endfor %}
+			
+			{% if page_obj.has_next %}
+				<a class="btn btn-outline-info mb-4" href="?page={{ page_obj.next_page_number }}">Next</a>
+				<a class="btn btn-outline-info mb-4" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+			{% endif %}
+			
+		{% endif %}
+</div>
+<script>
+    function switchView() {
+        var newestSort = document.getElementById('newestSort');
+        var oldestSort = document.getElementById('oldestSort');
+        
+        if (newestSort.classList.contains('active')) {
+            newestSort.classList.remove('active');
+            oldestSort.classList.add('active');
+        } else {
+            newestSort.classList.add('active');
+            oldestSort.classList.remove('active');
+        }
+    }
+</script>
+{% endblock %}
