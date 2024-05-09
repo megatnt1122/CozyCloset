@@ -1,360 +1,148 @@
-{% extends "blog/base.html" %}
-{% block title %}Comment On Blog Post{% endblock %}
 {% block content %}
-
 <style>
-  .comments-section {
-    margin-top: 1rem;
-    padding: 20px;
+  .edit-closet-container {
+    max-width: 400px; /* Adjusted width for a more compact form */
+    margin: 30px auto;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 15px; /* Smoother border radius */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Softer shadow */
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
 
-  .comment {
-    background-color: #f8f9fa;
-    border: 1px solid #ced4da;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    transition: box-shadow 0.3s;
+  h1 {
+    color: #4A4A4A;
+    font-size: 24px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 30px;
   }
 
-  .comment:hover {
-    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
-  }
-
-  .comment-header {
+  form {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
   }
 
-  .comment-header strong {
-    font-size: 20px;
-    font-weight: bold;
-    color: #343a40;
-  }
-
-  .comment-header .like-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    padding: 8px 16px;
-    border-radius: 5px;
+  form label {
     font-size: 14px;
     font-weight: bold;
-    background-color: #007bff;
-    color: white;
-    transition: background-color 0.3s;
+    color: #333;
+    margin-bottom: 5px;
   }
 
-  .comment-header .like-button:hover {
-    background-color: #0056b3;
+  form input[type='text'],
+  form input[type='checkbox'] {
+    padding: 12px;
+    border: 2px solid #eaeaea; /* Lighter border */
+    border-radius: 5px; /* Rounded corners for inputs */
+    margin-bottom: 20px; /* Increased space between inputs */
+    font-size: 14px;
   }
 
-  .comment-header img {
+  form input[type='text'] {
+    height: 45px; /* Increased height */
+    border: 2px solid #3498db;
+  }
+
+  form input[type='checkbox'] {
     width: 20px;
     height: 20px;
-    margin-left: 5px;
+    transform: scale(1); /* Normal size */
+    margin-right: 5px;
+    vertical-align: middle;
   }
 
-  .comment-header span {
-    font-size: 14px;
-    color: #666;
-  }
-
-  .comment-body {
-    color: #555;
-    font-size: 14px;
-    margin-top: 10px;
-  }
-
-  .form-group {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-top: 20px;
-  }
-
-  input[type="text"],
-  textarea {
-    width: 100%;
-    margin-top: 5px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 10px;
-  }
-
-  .post {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .post:hover {
-    background-color: #0056b3;
-  }
-  
-  /* Sort button settings */
-  .switch-view-btn {
-        padding: 0.1rem 0.5rem;
-        font-size: 1rem;
-        line-height: 1.5;
-        border-radius: 0.25rem;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.15s ease-in-out;
-        margin-left: 20px; /* Apply consistently or adjust as needed */
-   }
-
-   .switch-view-btn:hover {
-       background-color: #0056b3;
-   }
-
-   .btn-group {
-       display: flex;
-       justify-content: center;
-   }
-
-   /* Content visibility */
-   .content {
-       display: none;
-   }
-
-   .content.active {
-       display: block;
-   }
-	
-</style>
-<div id="newestSort" class="content active">
-	Sort by<button type="button" class="switch-view-btn" onclick="switchView()">Oldest First</button>
-	<div class="comments-section">
-		<h2>Comments...</h2>
-		{% if not comments %}
-			<p>No Comments Yet...</p>
-		{% else %}
-			{% for comment in comments|dictsortreversed:"date_added" %}
-				<div class="comment">
-					<div class="comment-header">
-						<strong>{{ comment.name }} - {{ comment.date_added }}</strong>
-						<div>
-							<a href="{% url 'comment_like' comment.id %}">
-								<button class="like-button">
-									{{ comment.liked }}
-									<img src="https://cdn-icons-png.flaticon.com/512/126/126473.png" alt="Like button">
-								</button>
-							</a>
-							<span>Likes: {{ comment.likes.count }}</span>
-						</div>
-					</div>
-					<div class="comment-body">
-						{{ comment.body }}
-					</div>
-				</div>
-			{% endfor %}
-		{% endif %}
-	</div>
-
-	<div class="form-group">
-		<form method="POST">
-			{% csrf_token %}
-			{{ form.as_p }}
-			<button type="submit" class="post">Add Comment</button>
-		</form>
-	</div>
-</div>
-
-<!-- Alternative View (View 2) -->
-<style>
-  .comments-section {
-    margin-top: 1rem;
-    padding: 20px;
-  }
-
-  .comment {
-    background-color: #f8f9fa;
-    border: 1px solid #ced4da;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    transition: box-shadow 0.3s;
-  }
-
-  .comment:hover {
-    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
-  }
-
-  .comment-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .comment-header strong {
-    font-size: 20px;
-    font-weight: bold;
-    color: #343a40;
-  }
-
-  .comment-header .like-button {
-    background: none;
-    border: none;
-    cursor: pointer;
+  form .checkbox-label {
     display: flex;
     align-items: center;
-    padding: 8px 16px;
+    font-size: 14px;
+    color: #333;
+  }
+
+  .submit-button {
+    margin-top: 25px;
+    padding: 12px 20px;
+    background-color: #3498db; /* Blue color */
+    color: #ffffff;
     border-radius: 5px;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: bold;
-    background-color: #007bff;
-    color: white;
-    transition: background-color 0.3s;
-  }
-
-  .comment-header .like-button:hover {
-    background-color: #0056b3;
-  }
-
-  .comment-header img {
-    width: 20px;
-    height: 20px;
-    margin-left: 5px;
-  }
-
-  .comment-header span {
-    font-size: 14px;
-    color: #666;
-  }
-
-  .comment-body {
-    color: #555;
-    font-size: 14px;
-    margin-top: 10px;
-  }
-
-  .form-group {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-top: 20px;
-  }
-
-  input[type="text"],
-  textarea {
-    width: 100%;
-    margin-top: 5px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 10px;
-  }
-
-  .post {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 15px;
     border: none;
-    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.3s ease-in-out;
   }
 
-  .post:hover {
-    background-color: #0056b3;
+  .submit-button:hover {
+    background-color: #2980b9; /* Darker shade on hover */
   }
-  
-  /* Sort button settings */
-  .switch-view-btn {
-        padding: 0.1rem 0.5rem;
-        font-size: 1rem;
-        line-height: 1.5;
-        border-radius: 0.25rem;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.15s ease-in-out;
-        margin-left: 20px; /* Apply consistently or adjust as needed */
+
+  @media (max-width: 768px) {
+    .edit-closet-container {
+      width: 90%;
+      padding: 20px;
     }
+  }
 
-   .switch-view-btn:hover {
-       background-color: #0056b3;
-   }
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+  }
 
-   .btn-group {
-       display: flex;
-       justify-content: center;
-   }
+  .switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
 
-   /* Content visibility */
-   .content {
-       display: none;
-   }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 34px;
+  }
 
-   .content.active {
-       display: block;
-   }
-	
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
+  }
+
+  input:checked + .slider {
+    background-color: #2196F3;
+  }
+
+  input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+  }
+
+  input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px); 
+  }
 </style>
-<div id="oldestSort" class="content">
-	Sort by<button type="button" class="switch-view-btn" onclick="switchView()">Newest First</button>
-	<div class="comments-section">
-		<h2>Comments...</h2>
-		{% if not comments %}
-			<p>No Comments Yet...</p>
-		{% else %}
-			{% for comment in comments|dictsort:"date_added" %}
-				<div class="comment">
-					<div class="comment-header">
-						<strong>{{ comment.name }} - {{ comment.date_added }}</strong>
-						<div>
-							<a href="{% url 'comment_like' comment.id %}">
-								<button class="like-button">
-									{{ comment.liked }}
-									<img src="https://cdn-icons-png.flaticon.com/512/126/126473.png" alt="Like button">
-								</button>
-							</a>
-							<span>Likes: {{ comment.likes.count }}</span>
-						</div>
-					</div>
-					<div class="comment-body">
-						{{ comment.body }}
-					</div>
-				</div>
-			{% endfor %}
-		{% endif %}
-	</div>
 
-	<div class="form-group">
-		<form method="POST">
-			{% csrf_token %}
-			{{ form.as_p }}
-			<button type="submit" class="post">Add Comment</button>
-		</form>
-	</div>
+<div class="edit-closet-container">
+  <h1>Write Comment:</h1>
+  <form method="post" action="{% url 'add_comment' pk=post.id %}">
+    {% csrf_token %}
+    {{ form.body }}
+    <button type="submit" class="submit-button">Write Comment</button>
+  </form>
 </div>
-
-<script>
-    function switchView() {
-        var newestSort = document.getElementById('newestSort');
-        var oldestSort = document.getElementById('oldestSort');
-        
-        if (newestSort.classList.contains('active')) {
-            newestSort.classList.remove('active');
-            oldestSort.classList.add('active');
-        } else {
-            newestSort.classList.add('active');
-            oldestSort.classList.remove('active');
-        }
-    }
-</script>
 {% endblock %}

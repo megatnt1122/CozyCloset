@@ -1,5 +1,9 @@
 {% extends "blog/base.html" %}
 {% block content %}
+<!-- Bootstrap Bundle with Popper (includes Bootstrap's JavaScript) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <style type="text/css">
     .card {
         transition: transform 0.3s ease; /* transition on hover */
@@ -84,9 +88,59 @@
         opacity: 1;
         right: 10px;
     }
-</style>
 
+    /* Modal Styling to Match 'Your Closets' Page */
+    .modal-content {
+        border: 2px solid #3498db; /* Blue border to match the 'edit' button style */
+        background-color: #fff; /* White background */
+    }
+
+    .modal-header, .modal-footer {
+        background-color: #f8f9fa; /* Light gray background */
+        border-color: #dee2e6; /* Light gray border */
+    }
+
+    .modal-title {
+        color: #333; /* Dark gray text */
+    }
+
+    .btn-primary {
+        background-color: #3498db; /* Blue background for primary buttons */
+        border-color: #3498db;
+    }
+
+    .btn-primary:hover {
+        background-color: #217dbb; /* Darker blue on hover */
+        border-color: #1f7ca8;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d; /* Default secondary button color */
+        border-color: #6c757d;
+    }
+
+    .btn-secondary:hover {
+        background-color: #565e64; /* Darker grey on hover */
+        border-color: #4e555b;
+    }
+
+    .form-label {
+        color: #495057; /* Dark grey for text labels */
+    }
+
+    .form-control {
+        border: 1px solid #ced4da; /* Standard input border */
+        color: #495057; /* Input text color */
+    }
+
+    textarea.form-control {
+        height: auto; /* Override default text area height if necessary */
+    }
+</style>
 <div class="container">
+    <div id="successMessage" class="alert alert-success" style="display:none;">
+        Item deleted successfully!
+    </div>
     {% if empty %}
         <p class="text-center">You haven't uploaded any clothes yet.</p>
     {% endif %}  
@@ -135,57 +189,123 @@
     <div class="row mt-4">
         {% for item in filteredItems %}
         <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <img src="{{ item.image.url }}" class="card-img-top img-fluid" style="height: 350px;" alt="Clothing Image"> <!-- Set height to 350px -->
+            <div class="card h-100" id="itemCard-{{ item.id }}">
+                <img src="{{ item.image.url }}" class="card-img-top img-fluid" style="height: 350px;" alt="{{ item.name }}">
                 <div class="card-body">
-                    <h5 class="card-title" style="text-align: center;">{{ item.name }}</h5>
+                    <h5 class="card-title">{{ item.name }}</h5>
                     <p class="card-text">Category: {{ item.category }}</p>
                     <p class="card-text">Style: {{ item.style }}</p>
                     <p class="card-text">Color: {{ item.color }}</p>
                     <div class="btn-group" role="group">
-                        <a href="/delete/{{ item.id }}/" class="btn btn-danger">Delete</a>
-                        <a href="/clothes/{{ item.id }}/addtocloset/" class="btn btn-success">Add To Closet</a>
-                        <a href="/clothes/{{ item.id }}/addtopost/" class="btn btn-info">Share</a>
+                        <button onclick="deleteItem('{{ item.id }}')" class="btn btn-danger">Delete</button>
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addToClosetModal" data-itemid="{{ item.id }}">Add To Closet</button>
+                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#shareModal" data-itemid="{{ item.id }}">Share</button>
                     </div>
                 </div>
             </div>
         </div>
         {% endfor %}
+    </div>
+
+<!-- Add to Closet Modal -->
+<div class="modal fade" id="addToClosetModal" tabindex="-1" role="dialog" aria-labelledby="addToClosetModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <!-- Modal content will be loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Share Item Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="shareModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <!-- Modal content will be loaded here by the JavaScript below -->
+        </div>
+    </div>
+</div>
 <script>
-    // Function to save filtering options to local storage
-    function saveFilterOptions() {
-        var category = document.getElementById('category').value;
-        var style = document.getElementById('style').value;
-        var color = document.getElementById('color').value;
-
-        localStorage.setItem('category', category);
-        localStorage.setItem('style', style);
-        localStorage.setItem('color', color);
+    function deleteItem(itemId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/clothes/delete/' + itemId + '/',
+                    type: 'GET',
+                    success: function(result) {
+                        $('#itemCard-' + itemId).fadeOut(500, function() { $(this).remove(); });
+                    },
+                    error: function() {
+                        Swal.fire(
+                            'Failed!',
+                            'There was an error deleting the item.',
+                            'error'
+                        );
+                    }
+                });
+            }
+        });
     }
 
-    function setFilterOptions() {
-        var category = localStorage.getItem('category') || ""; // Default to "" if null
-        var style = localStorage.getItem('style') || ""; // Default to "" if null
-        var color = localStorage.getItem('color') || ""; // Default to "" if null
+    $(document).ready(function() {
+        $('#shareModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            var itemId = button.data('itemid'); // Extract info from data-* attributes (assuming data-itemid holds the ID)
+            var modal = $(this);
 
-        document.getElementById('category').value = category;
-        document.getElementById('style').value = style;
-        document.getElementById('color').value = color;
+            // Fetch and load the form for the selected item
+            $.ajax({
+                url: `/clothes/${itemId}/addtopost`,  // Update URL to match your URL for fetching the form
+                success: function(data) {
+                    modal.find('.modal-content').html(data);
+                }
+            });
+        });
 
-        // Ensure the default "All" is selected if the values are still empty
-        if (!document.getElementById('category').value) {
-            document.getElementById('category').selectedIndex = 0;
-        }
-        if (!document.getElementById('style').value) {
-        document.getElementById('style').selectedIndex = 0;
-        }
-        if (!document.getElementById('color').value) {
-           document.getElementById('color').selectedIndex = 0;
-        }
-    }
+        $(document).on('submit', '#shareItemForm', function (event) {
+            event.preventDefault();
+            var form = $(this);
+            $.ajax({
+                type: form.attr('method'),
+                url: form.attr('action'),
+                data: form.serialize(),
+                success: function (response) {
+                    if(response.success) {
+                        // Redirect to the URL provided in the success response
+                        window.location.href = response.redirect_url;
+                    } else {
+                        alert('Error sharing item.'); // Handle errors
+                    }
+                },
+                error: function () {
+                    alert('Error sharing item.'); // Handle errors
+                }
+            });
+        });
+    });
 
-    window.onload = function() {
-        setFilterOptions();
-    };
+    $(document).ready(function() {
+        // Event handler for showing the 'Add to Closet' modal
+        $('#addToClosetModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            var itemId = button.data('itemid'); // Extract info from data-* attributes
+            var modal = $(this);
+
+            // Fetch and load the form for adding the item to the closet
+            $.ajax({
+                url: `/clothes/${itemId}/addtocloset/`,
+                success: function(data) {
+                    modal.find('.modal-content').html(data);
+                }
+            });
+        });
+    });
 </script>
 {% endblock %}

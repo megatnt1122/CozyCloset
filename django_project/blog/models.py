@@ -29,7 +29,7 @@ class Post(models.Model):
             pass
     
     def get_absolute_url(self):
-        return reverse('post-detail', kwargs={'pk': self.pk})
+        return reverse('blog-home')
 
 # Models for uploading
 class clothingCategories(models.Model):
@@ -142,7 +142,7 @@ class Comment(models.Model):
         return '%s - %s' % (self.post.title, self.name)
 
     def get_absolute_url(self):
-        return reverse('add_comment', kwargs={'pk': self.post.pk})
+        return reverse('blog-home')
 
 class Follow(models.Model):
     follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)

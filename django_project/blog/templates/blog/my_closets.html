@@ -67,7 +67,7 @@
     }
 
     .create-closet-button img {
-        display: block; /* This ensures the image takes up the full space of the button without any margins */
+        display: inline-block;
         width: 200px;
         height: 200px;
     }
@@ -78,14 +78,14 @@
 
 <div class="container">
     {% for closet in closets %}
-    <li class="images">
+    <li class="images" id="closetCard-{{ closet.id }}">
         <!-- Closet Image and name -->
         <div class="button-wrapper">
             <a href="{% url 'open-closet' closet.id %}">
                 <img src="/media/closet.png" width="200" height="200">
             </a>
             <h3 class="closetnames">{{ closet.name }}</h3>
-            <button class="delete" onclick="location.href='/myclosets/{{ closet.id }}/delete/'">Delete</button>
+            <button class="delete" onclick="confirmDeleteCloset('{{ closet.id }}')">Delete</button>
             <!-- Trigger the modal with a button -->
             <button type="button" class="edit" data-toggle="modal" data-target="#editClosetModal" data-closetid="{{ closet.id }}">Edit</button>
         </div>
@@ -115,6 +115,44 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+
+function getCSRFToken() {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; csrftoken=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+function confirmDeleteCloset(closetId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/myclosets/' + closetId + '/delete/',
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                },
+                success: function() {
+                    // Target the closet card and fade it out before removing
+                    $('#closetCard-' + closetId).fadeOut(500, function() {
+                        $(this).remove(); // Remove the closet card from DOM after fade out
+                    });
+                },
+                error: function() {
+                    Swal.fire('Failed!', 'There was an error deleting the closet.', 'error');
+                }
+            });
+        }
+    });
+}
+
 $(document).ready(function() {
     // Modal show event
     $('#editClosetModal').on('show.bs.modal', function (event) {

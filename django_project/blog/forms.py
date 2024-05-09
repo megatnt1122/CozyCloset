@@ -6,31 +6,24 @@ from urllib.request import urlopen
 from tempfile import NamedTemporaryFile
 from .models import Post
 
-class PostForm(forms.ModelForm):
-    item_image = forms.URLField(label='Item Image URL', required=False)  # Add a URL field for the item image
+class SingleLineTextField(forms.CharField):
+    widget = forms.TextInput
 
+class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['content']  # Remove 'image' field from the form
+        fields = ['content', 'image']
 
-    def save(self, commit=True):
-        instance = super().save(commit=False)
+    def __init__(self, *args, **kwargs):
+        shareditem = kwargs.pop('shareditem', None)
+        super(PostForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if isinstance(field, forms.CharField) and not isinstance(field.widget, forms.Textarea):
+                field.widget = forms.TextInput()
+        if shareditem:
+            self.fields['image'].initial = shareditem.image
+            self.fields['image'].widget = forms.HiddenInput()  # Hide the image field when shareditem is present
 
-        # Get the item image URL from the form data
-        item_image_url = self.cleaned_data.get('item_image', '')
-
-        if item_image_url:
-            # Download the image from the URL and save it to a temporary file
-            img_temp = NamedTemporaryFile(delete=True)
-            img_temp.write(urlopen(item_image_url).read())
-            img_temp.flush()
-
-            # Save the temporary image file to the instance's image field
-            instance.image.save(f"{instance.pk}_image.jpg", File(img_temp), save=False)
-
-        if commit:
-            instance.save()
-        return instance
 
 class OutfitForm(forms.ModelForm):
     class Meta:
@@ -51,19 +44,20 @@ class DirectMessagingForm(forms.ModelForm):
     class Meta:
         model = ConvoMessage
         fields = ['content',]
-        widgets = {
-            'content': forms.Textarea(attrs={
-                'class': 'w-full py-4 px-6 rounded-xl border'
-            })
-        }
+    
+    def __init__(self, *args, **kwargs):
+        super(DirectMessagingForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if isinstance(field, forms.CharField) and not isinstance(field.widget, forms.Textarea):
+                field.widget = forms.TextInput()
+
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['body']
-        widgets = {
-            'body': forms.Textarea(attrs={
-                'class': 'form-control', 
-                'style': 'min-height: 80px; width: 100%;',  # Add this line
-                'placeholder': 'Type your comment here...'
-            })
-        }
+        
+    def __init__(self, *args, **kwargs):
+        super(CommentForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if isinstance(field, forms.CharField) and not isinstance(field.widget, forms.Textarea):
+                field.widget = forms.TextInput()

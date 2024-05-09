@@ -1,43 +1,39 @@
-{% extends "blog/base.html" %}
-{% block title %}Add To Closet{% endblock %}
-
 {% block content %}
 <style>
-  body {
+  .modal-body {
     font-family: 'Arial', sans-serif;
   }
-  .form-container {
-    max-width: 600px;
-    margin: 40px auto;
-    background: #fff;
+  .modal-form-container {
     padding: 20px;
+    background: #fff;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
-  h1 {
+  .modal-header h1 {
     color: #333;
+    font-size: 24px;
     text-align: center;
-    margin-bottom: 24px;
   }
-  ul {
-    list-style-type: none;
+  .modal-ul {
+    list-style: none;
+    margin: 0;
     padding: 0;
   }
-  li {
-    font-size: 20px;
+  .modal-li {
+    font-size: 18px;
     border-bottom: 1px solid #eee;
-    padding: 10px;
+    padding: 8px;
     display: flex;
     align-items: center;
   }
-  li:last-child {
+  .modal-li:last-child {
     border-bottom: none;
   }
-  input[type="checkbox"] {
+  .modal-input {
     margin-right: 10px;
     transform: scale(1.2);
   }
-  button {
+  .modal-button {
     background-color: #5cb85c;
     color: white;
     padding: 10px 20px;
@@ -49,21 +45,38 @@
     width: 100%;
     margin-top: 20px;
   }
-  button:hover {
+  .modal-button:hover {
     background-color: #4cae4c;
+  }
+  .no-closets-message {
+    text-align: center;
+    margin-top: 20px;
+    color: #666;
+    font-size: 16px;
   }
 </style>
 
-<div class="form-container">
-  <h1>Add Item To Your Closets:</h1>
-  <form method="post" action="">
+<div class="modal-form-container">
+  <div class="modal-header">
+    <h1>Add {{ item.name }} To Your Closets:</h1>
+  </div>
+  <form method="post" action="{% url 'addto-closet' itemid=item.id %}" class="modal-body">
     {% csrf_token %}
-    {% for closet in closets %}
-    <ul>
-      <li><label><input type="checkbox" value="{{ closet.id }}" name="closet_{{ closet.id }}"> {{ closet.name }}</label></li>
+    {% if closets %}
+    <ul class="modal-ul">
+      {% for closet in closets %}
+        <li class="modal-li">
+          <label>
+            <input type="checkbox" value="{{ closet.id }}" name="closet_{{ closet.id }}" class="modal-input">
+            {{ closet.name }}
+          </label>
+        </li>
+      {% endfor %}
     </ul>
-    {% endfor %}
-    <button type="submit" name="save" value="save">Save</button>
+    <button type="submit" class="modal-button" name="save" value="save">Save</button>
+    {% else %}
+    <p class="no-closets-message">This item is already in all of your closets.</p>
+    {% endif %}
   </form>
 </div>
 {% endblock %}

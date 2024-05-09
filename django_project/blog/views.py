@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect, reverse
+import random
 from collections import defaultdict
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.contrib import messages
@@ -40,38 +41,41 @@ def LikeView(request, pk):
 @login_required
 def CommentLikeView(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
-    if request.user.is_authenticated:
-        if comment.likes.filter(id=request.user.id).exists():
-            comment.likes.remove(request.user)
-        else:
-            comment.likes.add(request.user)
-    # Redirect back to the same page
-    return redirect(request.META.get('HTTP_REFERER', '/'))
+    liked = False
+    if comment.likes.filter(id=request.user.id).exists():
+        comment.likes.remove(request.user)
+        liked = False
+    else:
+        comment.likes.add(request.user)
+        liked = True
 
-def home(request):
-    context = {
-        'posts': Post.objects.all()
-    }
-    return render(request, 'blog/home.html', context)
+    total_likes = comment.likes.count()
+    return JsonResponse({'liked': liked, 'total_likes': total_likes})
 
 
-class PostListView(ListView):
+class PostListView(LoginRequiredMixin, ListView):
     model = Post
     template_name = 'blog/home.html'  # <app>/<model>_<viewtype>.html
     context_object_name = 'posts'
     ordering = ['-date_posted']
-    paginate_by = 5
+    login_url = reverse_lazy('login')  # Specify the login URL
 
     def get_queryset(self):
-        # Check if the user is authenticated before filtering posts
-        if self.request.user.is_authenticated:
-            # Get a list of user IDs that the current user is following
-            followed_user_ids = Follow.objects.filter(follower=self.request.user).values_list('followed_id', flat=True)
-            # Filter the queryset to return only the posts from followed users
-            return super().get_queryset().filter(author_id__in=followed_user_ids)
-        else:
-            # If the user is not authenticated, return an empty queryset
-            return Post.objects.none()
+        # Get the IDs of followed users
+        followed_user_ids = Follow.objects.filter(follower=self.request.user).values_list('followed_id', flat=True)
+        # Fetch posts from followed users
+        followed_user_posts = super().get_queryset().filter(author_id__in=followed_user_ids)
+        return followed_user_posts
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get all comments related to the posts fetched in the queryset
+        post_ids = [post.id for post in context['posts']]
+        comments = Comment.objects.filter(post_id__in=post_ids)
+        context['comments'] = comments
+        allposts = Post.objects.exclude(id__in=post_ids)
+        context['allposts'] = allposts
+        return context
 
 
 class UserPostListView(ListView):
@@ -90,66 +94,87 @@ class PostDetailView(DetailView):
     
     def get_context_data(self, *args, **kwargs):
         context = super(PostDetailView, self).get_context_data(*args,**kwargs)
-        
-        
-        stuff = get_object_or_404(Post, id=self.kwargs['pk'])
-        total_likes = stuff.total_likes()
-        
+        post = get_object_or_404(Post, id=self.kwargs['pk'])
+        total_likes = post.total_likes()
+        comments = Comment.objects.filter(post=post)
         liked = False
-        if stuff.likes.filter(id=self.request.user.id).exists():
+        if post.likes.filter(id=self.request.user.id).exists():
             liked = True
-
         context["total_likes"] = total_likes
         context["liked"] = liked
+        context["comments"] = comments
         return context
 
 class AddCommentView(CreateView):
     model = Comment
     form_class = CommentForm
-    template_name = 'blog/add_comment.html'
+    template_name = 'blog/add_comment.html'  # Adjust if needed
 
     def form_valid(self, form):
         # Set the post reference on the new comment instance
         form.instance.post_id = self.kwargs['pk']
         # Attach the logged-in user as the commenter
-        form.instance.name = self.request.user  # Ensure your Comment model's 'name' field can accept a User instance
-        return super().form_valid(form)
+        form.instance.name = self.request.user.username
+        # Save the form instance but do not redirect
+        self.object = form.save()
 
-    def get_context_data(self, *args, **kwargs):
-        # Corrected usage of super to refer to this class, AddCommentView
-        extra_context = super(AddCommentView, self).get_context_data(*args, **kwargs)
-        # Retrieve the post using the primary key and add its comments to the context
-        post = get_object_or_404(Post, id=self.kwargs['pk'])
-        extra_context['comments'] = Comment.objects.filter(post=post)
-        return extra_context
+        # Check if the request is an AJAX request
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            data = {
+                'success': True,
+                'comment_id': self.object.id,
+                'name': self.object.name.username,  # Assuming you have a username field in your User model
+                'date_added': self.object.date_added.strftime("%m/%d/%Y, %H:%M"),  # Format the date however you like
+                'body': self.object.body,
+            }
+            return JsonResponse(data)
+        else:
+            return super().form_valid(form)
 
-class PostCreateView(LoginRequiredMixin, CreateView):
-    model = Post
-    fields = ['content', 'image']
+    def get_context_data(self, **kwargs):
+        context = super(AddCommentView, self).get_context_data(**kwargs)
+        post = get_object_or_404(Post, pk=self.kwargs['pk'])
+        context['post'] = post
+        context['comments'] = post.comments.all()  # Assuming a reverse relationship from Post to Comment
+        return context
 
-    def dispatch(self, request, *args, **kwargs):
-        self.item = kwargs.get('itemid', "")
-        return super(PostCreateView, self).dispatch(request, *args, **kwargs)
+@login_required
+def deleteComment(request, commentid=None):
+    comment = get_object_or_404(Comment, id=commentid)
+    comment.delete()
+    return JsonResponse({'message': 'Comment deleted successfully'})
 
-    def get_context_data(self,*args, **kwargs):
-        extra_context = super(PostCreateView, self).get_context_data(*args,**kwargs)
-        extra_context['userClothes'] = userClothes.objects.filter(bloguser=self.request.user)
-        if 'itemid' in self.kwargs:
-            shareditem = userClothes.objects.filter(id=self.kwargs['itemid']).first()
+@login_required
+def createPost(request, itemid=None):
+    try:
+        shareditem = userClothes.objects.get(id=itemid)
+    except userClothes.DoesNotExist:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Item not found'}, status=404)
+        else:
+            raise Http404("Item not found")
+
+    form = PostForm(request.POST or None, request.FILES or None, shareditem=shareditem)
+
+    if request.method == 'POST':
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
             if shareditem:
-                extra_context['shareditem'] = shareditem
-        return extra_context
-
-    def form_valid(self, form):
-        post = form.save(commit=False)  # Save the form to the 'post' but don't commit to the database yet
-        post.author = self.request.user
-        if 'itemid' in self.kwargs:  # Check if 'itemid' was passed to the view
-            shareditem = userClothes.objects.filter(id=self.kwargs['itemid']).first()
-            if shareditem:  # Check if a valid userClothes item was found
-                post.image = shareditem.image  # Assign the image from the shareditem to the post instance
-        post.save()  # Now save the post to the database
-        return HttpResponseRedirect(post.get_absolute_url())  # Redirect to the newly created post's detail view
-
+                post.image = shareditem.image  # Use image from shared item
+            post.save()
+            # Redirect on successful submission
+            return redirect(post.get_absolute_url())
+        else:
+            errors = form.errors.as_json()
+            return JsonResponse({'success': False, 'errors': errors}, status=400)
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Return only the necessary HTML for the AJAX-loaded modal
+        return render(request, 'blog/post_form.html', {'form': form, 'shareditem': shareditem})
+    else:
+        # Return the full page if not an AJAX request
+        return render(request, 'blog/post_form.html', {'form': form, 'shareditem': shareditem})
 
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
@@ -219,11 +244,13 @@ def userProfile(request, username):
 class UploadView(LoginRequiredMixin, CreateView):
     model = userClothes
     fields = ['name','category','style','color','image']
+    success_url = reverse_lazy('upload')
 
-    # links the current user to the item being uploaded
     def form_valid(self, form):
-        form.instance.bloguser = self.request.user
-        return super().form_valid(form)
+        form.instance.bloguser = self.request.user 
+        response = super().form_valid(form)  
+        messages.success(self.request, 'Your item was uploaded successfully!')
+        return response
 
 # the view for creating a new closet
 class ClosetCreateView(LoginRequiredMixin, CreateView):

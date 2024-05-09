@@ -306,175 +306,170 @@
         </div>
     </div>
 
-    <script>
-        function switchView() {
-            var clothesList = document.getElementById('clothesList');
-            var alternativeView = document.getElementById('alternativeView');
-            clothesList.classList.toggle('active');
-            alternativeView.classList.toggle('active');
-        }
+<script>
+    function switchView() {
+        var clothesList = document.getElementById('clothesList');
+        var alternativeView = document.getElementById('alternativeView');
+        clothesList.classList.toggle('active');
+        alternativeView.classList.toggle('active');
+    }
 
-        // Function to initialize Glide carousel for each category
-        document.addEventListener('DOMContentLoaded', function () {
-            var glideInstances = document.querySelectorAll('.glide');
-            glideInstances.forEach(function(instance) {
-                new Glide(instance, {
-                    type: 'carousel',
-                    perView: 3,
-                    gap: 30,
-                    autoplay: false,
-                    breakpoints: {
-                        768: {
-                            perView: 2
-                        },
-                        576: {
-                            perView: 1
-                        }
-                    }
-                }).mount();
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function () {
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.alert');
-                alerts.forEach(alert => {
-                    alert.style.opacity = '0';
-                    setTimeout(() => alert.remove(), 600);
-                });
-            }, 5000);
-        });
-
-        function createOutfit() {
-            {% if create_outfits %}
-                // Redirect the user to the outfit creation page
-                window.location.href = '/myclosets/{{ closetId }}/createoutfit/';
-                return; // Stop execution after redirecting
-            {% else %}
-                // Display a warning alert if create_outfits is false
-                Swal.fire({
-                    title: 'Insufficient Items',
-                    text: 'You need at least one top, bottom, and footwear item to create an outfit.',
-                    icon: 'warning',
-                    confirmButtonColor: '#3085d6',
-                    confirmButtonText: 'OK'
-                });
-            {% endif %}
-        }
-
-
-        function deleteOutfit(element) {
-            const outfitId = element.getAttribute('data-outfit-id');
-            const url = `/myclosets/${outfitId}/deleteoutfit/`;
-
+    function createOutfit() {
+        {% if create_outfits %}
+            window.location.href = '/myclosets/{{ closetId }}/createoutfit/';
+            return; // Stop execution after redirecting
+        {% else %}
             Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
+                title: 'Insufficient Items',
+                text: 'You need at least one top, bottom, and footwear item to create an outfit.',
                 icon: 'warning',
-                showCancelButton: true,
                 confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch(url, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRFToken': getCookie('csrftoken'),
-                            'Content-Type': 'application/json',
-                        },
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        element.closest('.outfit').remove();
-                        displayAlert('Outfit deleted successfully.');
-                    })
-                    .catch((error) => {
-                        console.error('Error:', error);
-                        displayAlert('There was an issue deleting your outfit.', 'danger');
-                    });
-                }
+                confirmButtonText: 'OK'
             });
-        }
+        {% endif %}
+    }
 
-        function removeItem(buttonElement, itemId, closetId) {
-            const url = `/myclosets/${closetId}/remove/${itemId}/`;
-
-            fetch(url, {
+    function deleteOutfit(element) {
+        const outfitId = element.getAttribute('data-outfit-id');
+        const url = `/myclosets/${outfitId}/deleteoutfit/`;
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(url, {
                 method: 'DELETE',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json',
+                    }
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                }).then(data => {
+                    $(element).closest('.outfit').fadeOut(500, function() { $(this).remove();
+                    }); 
+                }).catch((error) => {
+                    console.error('Error:', error);
+                    displayAlert('There was an issue deleting your outfit.', 'danger');
+                });
+            }
+        });
+    }
+
+    function removeItem(buttonElement, itemId, closetId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const url = `/myclosets/${closetId}/remove/${itemId}/`;
+                fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json',
+                    }
+                }).then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                }).then(data => {
+                    const itemElement = buttonElement.closest('.col-md-4');
+                    if (itemElement) {
+                        $(itemElement).fadeOut(500, function() { $(this).remove(); });
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Failed!', 'There was an issue removing the item: ' + error.message, 'error');
+                });
+            }
+        });
+    }
+
+    function displayAlert(message, type = 'success') {
+        const alertHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `;
+        const messageContainer = document.querySelector('.message-container') || createMessageContainer();
+        messageContainer.innerHTML = alertHTML + messageContainer.innerHTML;
+        messageContainer.style.display = 'block';
+        setTimeout(() => {
+            const alert = messageContainer.querySelector('.alert');
+            if (alert) {
+                alert.style.opacity = '0';
+                alert.addEventListener('transitionend', () => {
+                    alert.remove();
+                });
+            }
+        }, 5000);
+    }
+
+    function createMessageContainer() {
+        const container = document.createElement('div');
+        container.className = 'message-container';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                // Traverse the DOM to find the parent item element and remove it
-                const itemElement = buttonElement.closest('.col-md-4');
-                if (itemElement) {
-                    itemElement.remove();
-                }
-                displayAlert('Item removed successfully.', 'success');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                displayAlert('There was an issue removing the item: ' + error.message, 'error');
-            });
+            }
         }
+        return cookieValue;
+    }
 
-
-
-            function displayAlert(message, type = 'success') {
-                const alertHTML = `
-                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                        ${message}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                `;
-                const messageContainer = document.querySelector('.message-container') || createMessageContainer();
-                messageContainer.innerHTML = alertHTML + messageContainer.innerHTML;
-                messageContainer.style.display = 'block';
-                setTimeout(() => {
-                    const alert = messageContainer.querySelector('.alert');
-                    if (alert) {
-                        alert.style.opacity = '0';
-                        alert.addEventListener('transitionend', () => {
-                            alert.remove();
-                        });
-                    }
-                }, 5000);
-            }
-
-            function createMessageContainer() {
-                const container = document.createElement('div');
-                container.className = 'message-container';
-                document.body.appendChild(container);
-                return container;
-            }
-
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
+    document.addEventListener('DOMContentLoaded', function () {
+        var glideInstances = document.querySelectorAll('.glide');
+        glideInstances.forEach(function(instance) {
+            new Glide(instance, {
+                type: 'carousel',
+                perView: 3,
+                gap: 30,
+                autoplay: false,
+                breakpoints: {
+                    768: {
+                        perView: 2
+                    },
+                    576: {
+                        perView: 1
                     }
                 }
-                return cookieValue;
-            }
+            }).mount();
+        });
+
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 600);
+            });
+        }, 5000);
+    });
 </script>
+
 {% endblock %}
