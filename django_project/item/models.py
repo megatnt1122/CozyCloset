@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
@@ -17,10 +19,17 @@ class Size(models.Model):
     def __str__(self):
         return self.name
     
+class ShoeSize(models.Model):
+     name = models.CharField(max_length=255)
+
+     def __str__(self):
+        return self.name
+    
 class Item(models.Model):
     category = models.ForeignKey(Category, related_name='items', on_delete=models.CASCADE,default=0)
     name = models.CharField(max_length=255)
-    size = models.ForeignKey(Size, related_name='items', on_delete=models.CASCADE,default=1)
+    size = models.ForeignKey(Size, related_name='size', on_delete=models.CASCADE,default=1, null=True, blank=True)
+    shoeSize = models.ForeignKey(ShoeSize, related_name='shoeSize', on_delete=models.CASCADE, default=47, null=True, blank=True)
     description = models.TextField(blank=True, null=True)
     price = models.FloatField()
     image = models.ImageField(upload_to='item_images', blank=True, null=True)

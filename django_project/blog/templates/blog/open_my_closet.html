@@ -1,245 +1,475 @@
 {% extends "blog/base.html" %}
 {% block content %}
-<style type="text/css">
-    /* Header and overall layout */
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style type="text/css">
+        #django-messages {
+            display: none;
+        }
 
-    .header-title {
-        text-align: center;
-    }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
 
-    /* Card styles */
-    .card {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-        border: 1px solid #dee2e6;
-        border-radius: 0.25rem;
-    }
+        .header-title {
+            text-align: center;
+        }
 
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
+        .card {
+            display: flex;
+            flex-direction: column;
+            background-color: #333333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            width: 325px;
+            height: 575px;
+            margin: 15px;
+            color: white;
+        }
 
-    .card-img-top {
-        height: 350px;
-        object-fit: cover;
-        border-top-left-radius: calc(0.25rem - 1px);
-        border-top-right-radius: calc(0.25rem - 1px);
-    }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
 
-    .card-body {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
+        .card-img-top {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            border-top-left-radius: calc(0.25rem - 1px);
+            border-top-right-radius: calc(0.25rem - 1px);
+        }
 
-    .card-title {
-        text-align: center;
-        margin-bottom: 10px;
-    }
+        .card-body {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
 
-    /* Button styles - Ensuring uniform style */
-    .switch-view-btn {
-        padding: 0.375rem 0.75rem;
-        font-size: 1rem;
-        line-height: 1.5;
-        border-radius: 0.25rem;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.15s ease-in-out;
-        margin-left: 20px; /* Apply consistently or adjust as needed */
-    }
+        .card-title {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: white;
+        }
 
-    .switch-view-btn:hover {
-        background-color: #0056b3;
-    }
+        .switch-view-btn {
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: 0.25rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+        }
 
-    .btn-group {
-        display: flex;
-        justify-content: center;
-    }
+        .switch-view-btn:hover {
+            background-color: #0056b3;
+        }
 
-    /* Responsiveness and alignment */
-    .row {
-        display: flex;
-        flex-wrap: wrap;
-    }
+        .btn-group {
+            display: flex;
+            justify-content: center;
+        }
 
-    .col-md-4 {
-        width: 33.3333%;
-        padding: 15px;
-    }
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-evenly;
+        }
 
-    /* Content visibility */
-    .content {
-        display: none;
-    }
+        .col-md-4 {
+            flex: 0 0 auto;
+            width: 300px;
+        }
 
-    .content.active {
-        display: block;
-    }
-</style>
+        .content {
+            display: none;
+        }
 
-<div id="clothesList" class="content active">
-    <div class="header">
-        <div class="header-title">
-            <h1>{{ username }}'s Closet: {{ title }}</h1>
-            {% if empty %}
-                <p>This Closet Is Empty!</p>
-            {% endif %}
+        .content.active {
+            display: block;
+        }
+
+        .message-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .category-title {
+            font-size: 24px; 
+            color: #f0f0f0; 
+            text-transform: uppercase; 
+            background-color: #444444;
+            padding: 10px 0;
+            margin-top: 30px; 
+            border-top: 3px solid #666666;
+            text-align: center;
+            width: 100%; 
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.5); 
+        }
+    </style>
+
+    <div id="clothesList" class="content active">
+        <div class="header">
+            <div class="header-title">
+                <h1>{{ username }}'s Closet: {{ title }}</h1>
+                {% if empty %}
+                    <p>This Closet Is Empty!</p>
+                {% endif %}
+            </div>
+            <button type="button" class="switch-view-btn" onclick="switchView()">Switch To Outfit View</button>
         </div>
-        <button type="button" class="switch-view-btn" onclick="switchView()">Switch To Outfit View</button>
+
+        {% if messages %}
+            <div class="message-container">
+                {% for message in messages %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        Outfit Created Successfully!
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if not empty %}
+            {% for category, items in categorized_clothes.items %}
+                <h2 class="category-title">{{ category }}</h2>
+                <div class="row">
+                    {% for item in items %}
+                        <div class="col-md-4">
+                            <div class="card">
+                                <img src="{{ item.image.url }}" alt="{{ item.name }}" class="card-img-top">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ item.name }}</h5>
+                                    <p class="card-text">Style: {{ item.style }}</p>
+                                    <p class="card-text">Color: {{ item.color }}</p>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-danger" onclick="removeItem(this, '{{ item.id }}', '{{ closet.id }}')">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% endif %}
     </div>
 
-    <!-- Clothes List -->
-    {% if not empty %}
-        {% for category, items in categorized_clothes.items %}
-            <h2 class="category-title">{{ category }}</h2>
-            <div class="row">
-                {% for item in items %}
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <img src="{{ item.image.url }}" alt="{{ item.name }}" class="card-img-top">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ item.name }}</h5>
-                                <p class="card-text">Style: {{ item.style }}</p>
-                                <p class="card-text">Color: {{ item.color }}</p>
-                                <div class="btn-group" role="group">
-                                    <a href="/delete/{{ item.id }}/{{ closet.id }}" class="btn btn-danger">Remove</a>
-                                </div>
+    <!-- Alternative View (View 2) -->
+    <div id="alternativeView" class="content">
+        <style type="text/css">
+            .header {
+                display: flex;
+                justify-content: space-between;
+                            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .header-title {
+            text-align: center;
+        }
+
+        .outfit-gallery-container {
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+
+        .outfits-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .plus {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .create-outfit-link {
+            display: block;
+        }
+
+        .create-outfit-icon {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+        }
+
+        .outfit {
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .outfit:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .outfit-details {
+            text-align: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .outfit-image {
+            width: 120px;
+            height: 160px;
+            object-fit: cover;
+            margin: 5px auto;
+            border-radius: 8px;
+        }
+
+        .btn-group {
+            margin-top: auto;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .fade {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .show {
+            opacity: 1;
+        }
+        </style>
+
+        <div class="header">
+            <div class="header-title">
+                <h1>{{ username }}'s Closet: {{ title }}</h1>
+                {% if empty %}
+                    <p>(This Closet Is Empty!)</p>
+                {% endif %}
+            </div>
+            <button type="button" class="switch-view-btn" onclick="switchView()">Switch To Item View</button>
+            <div class="plus">
+                <a class="create-outfit-link" href="#" onclick="createOutfit()">
+                    <img src="/media/plus.png" alt="Create New Outfit" class="create-outfit-icon" style="width: 100px; height: 100px;">
+                </a>
+            </div>
+        </div>
+
+        <div class="outfit-gallery-container">
+            <div class="outfits-container">
+                {% for outfit in user_outfits %}
+                    <div class="outfit">
+                        <div class="outfit-details">
+                            <h3>{{ outfit.name }}</h3>
+                            <img src="{{ outfit.top.image.url }}" alt="Top" class="outfit-image">
+                            <img src="{{ outfit.bottoms.image.url }}" alt="Bottoms" class="outfit-image">
+                            <img src="{{ outfit.footwear.image.url }}" alt="Footwear" class="outfit-image">
+                            {% if outfit.accessory %}
+                                <img src="{{ outfit.accessory.image.url }}" alt="Accessory" class="outfit-image">
+                            {% endif %}
+                            {% if outfit.outerwear %}
+                                <img src="{{ outfit.outerwear.image.url }}" alt="Outerwear" class="outfit-image">
+                            {% endif %}
+                            <div class="btn-group" role="group">
+                                <a href="javascript:void(0);" class="btn btn-danger" onclick="deleteOutfit(this)" data-outfit-id="{{ outfit.id }}">Remove</a>
                             </div>
                         </div>
                     </div>
                 {% endfor %}
             </div>
-        {% endfor %}
-    {% endif %}
-</div>
-
-<!-- Alternative View (View 2) -->
-<div id="alternativeView" class="content">
-<style type="text/css">
-    /* Your existing styles */
-    .outfit-gallery-container {
-        max-width: 1200px;
-        margin: 20px auto;
-    }
-
-    .outfits-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 30px;
-    }
-
-    .outfit {
-        border: 2px solid #007bff;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-        display: flex;
-        flex-direction: column; /* Align children vertically */
-        justify-content: space-between; /* Distribute space between elements */
-    }
-
-    .outfit:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-    }
-
-    .outfit-details {
-        text-align: center;
-        padding: 15px;
-        background-color: #f8f9fa;
-        flex-grow: 1; /* Allow the details to fill available space */
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between; /* Distribute space within the card */
-    }
-
-    .outfit-image {
-        width: 120px; /* Adjust based on your preference */
-        height: 160px; /* Adjust based on your preference */
-        object-fit: cover; /* Keeps the aspect ratio and fills the space */
-        margin: 5px auto; /* Center the image and provide margin */
-        border-radius: 8px;
-    }
-
-    .btn-group {
-        margin-top: auto; /* Push the button group to the bottom */
-        width: 100%; /* Make button group take full width of the card */
-        display: flex;
-        justify-content: center; /* Center button group if needed */
-    }
-
-    /* Your other styles remain unchanged */
-</style>
-
-<div class="header">
-    <div class="header-title">
-        <h1>{{ username }}'s Closet: {{ title }}</h1>
-        {% if empty %}
-            <p>(This Closet Is Empty!)</p>
-        {% endif %}
+        </div>
     </div>
-    <button type="button" class="switch-view-btn" onclick="switchView()">Switch To Item View</button>
-</div>
-
-<div class="outfit-gallery-container">
-    <div class="outfits-container">
-        {% for outfit in user_outfits %}
-            <div class="outfit">
-                <div class="outfit-details">
-                    <h3>{{ outfit.name }}</h3>
-                    <img src="{{ outfit.top.image.url }}" alt="Top" class="outfit-image">
-                    <img src="{{ outfit.bottoms.image.url }}" alt="Bottoms" class="outfit-image">
-                    <img src="{{ outfit.footwear.image.url }}" alt="Footwear" class="outfit-image">
-                    {% if outfit.accessory %}
-                        <img src="{{ outfit.accessory.image.url }}" alt="Accessory" class="outfit-image">
-                    {% endif %}
-                    {% if outfit.outerwear %}
-                        <img src="{{ outfit.outerwear.image.url }}" alt="Outerwear" class="outfit-image">
-                    {% endif %}
-                    <div class="btn-group" role="group">
-                        <a href="/myclosets/{{ closet.id }}/{{ outfit.id }}/deleteoutfit/" class="btn btn-danger">Remove</a> <!-- Make sure to replace `outfit.id` with the correct id if necessary -->
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-        <div class="plus">
-            <a class="create-outfit-link" href="/myclosets/{{ closet.id }}/createoutfit/">
-                <img src="/media/plus.png" alt="Create New Outfit" class="create-outfit-icon" style="width: 100px; height: 100px;">
-            </a>
-        </div>    
-    </div>
-</div>
 
 <script>
     function switchView() {
         var clothesList = document.getElementById('clothesList');
         var alternativeView = document.getElementById('alternativeView');
-        
-        if (clothesList.classList.contains('active')) {
-            clothesList.classList.remove('active');
-            alternativeView.classList.add('active');
-        } else {
-            clothesList.classList.add('active');
-            alternativeView.classList.remove('active');
-        }
+        clothesList.classList.toggle('active');
+        alternativeView.classList.toggle('active');
     }
+
+    function createOutfit() {
+        {% if create_outfits %}
+            window.location.href = '/myclosets/{{ closetId }}/createoutfit/';
+            return; // Stop execution after redirecting
+        {% else %}
+            Swal.fire({
+                title: 'Insufficient Items',
+                text: 'You need at least one top, bottom, and footwear item to create an outfit.',
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+            });
+        {% endif %}
+    }
+
+    function deleteOutfit(element) {
+        const outfitId = element.getAttribute('data-outfit-id');
+        const url = `/myclosets/${outfitId}/deleteoutfit/`;
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(url, {
+                method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json',
+                    }
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                }).then(data => {
+                    $(element).closest('.outfit').fadeOut(500, function() { $(this).remove();
+                    }); 
+                }).catch((error) => {
+                    console.error('Error:', error);
+                    displayAlert('There was an issue deleting your outfit.', 'danger');
+                });
+            }
+        });
+    }
+
+    function removeItem(buttonElement, itemId, closetId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const url = `/myclosets/${closetId}/remove/${itemId}/`;
+                fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json',
+                    }
+                }).then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                }).then(data => {
+                    const itemElement = buttonElement.closest('.col-md-4');
+                    if (itemElement) {
+                        $(itemElement).fadeOut(500, function() { $(this).remove(); });
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Failed!', 'There was an issue removing the item: ' + error.message, 'error');
+                });
+            }
+        });
+    }
+
+    function displayAlert(message, type = 'success') {
+        const alertHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `;
+        const messageContainer = document.querySelector('.message-container') || createMessageContainer();
+        messageContainer.innerHTML = alertHTML + messageContainer.innerHTML;
+        messageContainer.style.display = 'block';
+        setTimeout(() => {
+            const alert = messageContainer.querySelector('.alert');
+            if (alert) {
+                alert.style.opacity = '0';
+                alert.addEventListener('transitionend', () => {
+                    alert.remove();
+                });
+            }
+        }, 5000);
+    }
+
+    function createMessageContainer() {
+        const container = document.createElement('div');
+        container.className = 'message-container';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var glideInstances = document.querySelectorAll('.glide');
+        glideInstances.forEach(function(instance) {
+            new Glide(instance, {
+                type: 'carousel',
+                perView: 3,
+                gap: 30,
+                autoplay: false,
+                breakpoints: {
+                    768: {
+                        perView: 2
+                    },
+                    576: {
+                        perView: 1
+                    }
+                }
+            }).mount();
+        });
+
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 600);
+            });
+        }, 5000);
+    });
 </script>
 
 {% endblock %}

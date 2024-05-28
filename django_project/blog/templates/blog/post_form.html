@@ -1,20 +1,104 @@
-{% extends "blog/base.html" %}
-{% load crispy_forms_tags %}
 {% block content %}
-	<div class="content-selection">
-		<form method="POST" enctype="multipart/form-data">
-			{% csrf_token %}
-			<fieldset class="form-group">
-				{% if shareditem.image.url != undefined %}
-				<legend class="border-bottom mb-4">Blog Post with Image -> <img src=" {{ shareditem.image.url }}"> </legend>
-				{% else %}
-				<legend class="border-bottom mb-4">Blog Post</legend>
-				{% endif %}
-				{{ form | crispy }}
-			</fieldset>
-			<div class="form-group">
-				<button class="btn btn-outline-info" type="submit">Post</button>
-			</div>
-		</form>
-	</div>
-{% endblock content %}
+<style>
+  .share-container {
+    max-width: 400px; /* Consistent width */
+    margin: 30px auto;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 15px; /* Smooth border radius */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Soft shadow for subtle depth */
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; /* Stylish font */
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  form label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+  }
+
+  form input[type='text'],
+  form textarea {
+    padding: 12px;
+    border: 2px solid #3498db; /* Consistent blue border */
+    border-radius: 5px; /* Rounded corners for inputs */
+    margin-bottom: 20px; /* Space between fields */
+    font-size: 14px;
+  }
+
+  form textarea {
+    max-height: 50px; /* Smaller height for the caption area */
+  }
+
+  .shared-item-image {
+    width: 100%; /* Full width of the container */
+    border-radius: 5px; /* Rounded corners for the image */
+    margin-bottom: 20px; /* Space below the image */
+  }
+
+  .submit-button {
+    padding: 12px 20px;
+    background-color: #3498db; /* Consistent button color */
+    color: white;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+  }
+
+  .submit-button:hover {
+    background-color: #2980b9; /* Darker on hover */
+  }
+</style>
+
+<div class="share-container">
+  <form method="post" enctype="multipart/form-data" action="{% url 'addto-post' itemid=shareditem.id %}">
+    {% csrf_token %}
+    {% if shareditem.image %}
+      <img src="{{ shareditem.image.url }}" alt="Shared Item" class="shared-item-image">
+    {% endif %}
+    <label for="content">Caption:</label>
+    {{ form.content }}
+    {% if not shareditem %}
+      <label for="image">Image:</label>
+      {{ form.image }}  <!-- Show image upload field only if there's no shareditem -->
+    {% endif %}
+    <button type="submit" class="submit-button">Post</button>
+  </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#shareItemForm').on('submit', function (event) {
+        event.preventDefault();
+        var form = $(this);
+        $.ajax({
+            type: form.attr('method'),
+            url: form.attr('action'),
+            data: new FormData(form[0]), // Use FormData to handle file uploads
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                if(response.success) {
+                    // Redirect to the URL provided in the success response
+                    window.location.href = response.redirect_url;
+                } else {
+                    alert('Error sharing item.'); // Handle errors
+                }
+            },
+            error: function () {
+                alert('Error sharing item.'); // Handle errors
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,28 +1,68 @@
 {% extends 'blog/base.html' %}
-
 {% block title %}Search Results{% endblock %}
-
 {% block content %}
+<style type="text/css">
+    .user-card {
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .user-card:hover {
+        box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+    }
+    .user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .user-info {
+        margin-left: 20px;
+    }
+    .user-name {
+        font-size: 20px;
+        font-weight: bold;
+        color: #343a40;
+    }
+    .user-actions {
+        text-align: left;
+        margin-top: 10px;
+    }
+    .message-btn {
+        padding: 8px 16px;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        background-color: #007bff;
+        color: white;
+        margin-right: 10px;
+    }
+    .message-btn:hover {
+        background-color: #0056b3;
+        color: white;
+    }
+</style>
 <div class="container">
     <div class="row">
         <div class="col-md-8 offset-md-2">
             <h1 class="mt-4 mb-4">Search Results</h1>
-            {% for user in users %}
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="media">
-						<a href="{% url 'profile' %}">
-                        <img class="rounded-circle mr-3" src="{{ user.profile.image.url }}" alt="{{ user.username }}" style="width: 50px; height: 50px;">
-                        </a>
-						<div class="media-body">
-                            <h2 class="mt-0">
-                                <a href="{% url 'user-posts' user.username %}" class="text-dark">{{ user.username }}</a>
-                            </h2>
-                            <!-- Button for sending a message -->
-                            <!-- Ensure you have a URL named 'send-message' that accepts a username as an argument -->
-                            <a href="{% url 'send-message' user.id %}" class="btn btn-primary">Message</a>
-							<a href="{% url 'user-posts' user.username %}" class="btn btn-primary">View Posts</a>
-							<a href="{% url 'user-closets' user.username %}" class="btn btn-primary">View Cozy Closet</a>
+            {% for user, status in following_status.items %}
+            <div class="user-card">
+                <div class="media">
+                    <a href="{% url 'user-profile' user.username %}">
+                        <img class="user-avatar mr-3" src="{{ user.profile.image.url }}" alt="{{ user.username }}">
+                    </a>
+                    <div class="media-body user-info">
+                        <h2 class="user-name">
+                            <a href="{% url 'user-profile' user.username %}" class="text-dark">{{ user.username }}</a>
+                        </h2>
+                        <div class="user-actions">
+                            <button type="button" class="message-btn" onclick="location.href='{% url 'send-message' user.id %}';">Message</button>
+                            <button type="button" class="message-btn" onclick="location.href='{% url 'user-profile' user.username %}';">View Profile</button>
                         </div>
                     </div>
                 </div>

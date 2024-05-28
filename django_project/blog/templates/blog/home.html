@@ -1,48 +1,707 @@
 {% extends "blog/base.html" %}
 {% block content %}
-	{% for post in posts %}
-	   <center>
-		<article class="media content-section">
-			<a href="{% url 'profile' %}">
-			<img class="rounded-circle article-img" src="{{ post.author.profile.image.url }}">
-			</a>
-		  <div class="media-body">
-			<div class="article-metadata">
-			  <a class="mr-2" href="{% url 'user-posts' post.author.username %}">{{ post.author }}</a>
-			  <small class="text-muted">{{ post.date_posted | date:"F d, Y" }}</small>
-			  <a class="navbar-brand mr-4" href="{% url 'post-detail' post.id %}"><img class="logo" src="/media/pencil.jpg" width="25" height="25" alt="Logo"></a>
-			  <!-- Line above is so you can update/see post details if it doesn't have a title -->
-			</div>
-            <!--<h2><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>-->
-			{% if post.image.url != undefined %}
-				<a href={{post.image.url}} target="_blank">
-				<img class="image" src="{{ post.image.url }}" target="_blank" style="max-width:800px; max-height:800px;">
-				</a>
-			{% endif %}
-			<p class="article-content">{{ post.content }}</p>
-		  </div>
-		</article>
-	    </center>
-	{% endfor %}
-	{% if is_paginated %}
-	
-		{% if page_obj.has_previous %}
-			<a class="btn btn-outline-info mb-4" href="?page=1">First</a>
-			<a class="btn btn-outline-info mb-4" href="?page={{ page_obj.previous_page_number }}">Previous</a>
-		{% endif %}
-		
-		{% for num in page_obj.paginator.page_range %}
-			{% if page_obj.number == num %}
-				<a class="btn btn-info mb-4" href="?page={{ num }}">{{ num }}</a>	
-			{% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-				<a class="btn btn-outline-info mb-4" href="?page={{ num }}">{{ num }}</a>
-			{% endif %}
-		{% endfor %}
-		
-		{% if page_obj.has_next %}
-			<a class="btn btn-outline-info mb-4" href="?page={{ page_obj.next_page_number }}">Next</a>
-			<a class="btn btn-outline-info mb-4" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
-		{% endif %}
-		
-	{% endif %}
+<style>
+    /* Begin styles */
+
+    .card-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .card {
+        transition: transform 0.2s;
+        border-radius: 10px 0 0px 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: calc(50% - 10px); /* Adjust the width of the card if necessary */
+        margin-bottom: 20px; /* Add margin below cards */
+        flex: 1 1 45%;
+    }
+
+    .like-icon,
+    .comment-icon {
+        width: 25px;
+        height: 25px;
+        vertical-align: middle;
+    }
+
+    .like-comment {
+        width: 25px;
+        height: 25 px;
+    }
+
+    .card .card-img {
+        width: 100%;  /* takes full width of the card */
+        height: 550px; /* fixed height */
+        object-fit: contain; /* covers the size box, could be 'contain' to fit the whole image */
+    }
+
+    .card-body {
+        padding: 15px;
+    }
+
+    .card-content img {
+        width: 100%; /* Ensure the image scales to the width of the card */
+        height: auto; /* Maintain aspect ratio */
+    }
+
+    .card-caption {
+        padding: 15px;
+        border-top: 1px solid #e9e9e9; /* Add a top border */
+    }
+
+    .card-footer {
+        padding: 10px 15px;
+        border-top: 1px solid #e9e9e9; /* Add a top border */
+        display: flex;
+        justify-content: space-between; /* Align children to the ends of the container */
+        align-items: center; /* Center items vertically */
+    }
+
+    .comment-section {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-sizing: border-box;
+        max-height: 800px; /* Set maximum height */
+        overflow-y: auto; /* Add scrollbar when needed */
+        padding: 20px;
+        background-color: white;
+        margin-bottom: 20px;
+        border-radius: 0px 10px 10px 0px;
+    }
+
+    .comment {
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        border-radius: 10px;
+        padding: 20px;
+        transition: box-shadow 0.3s;
+        margin-bottom: 10px;
+    }
+
+    .comment:hover {
+        box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+    }
+
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: center;
+    }
+
+    .comment-header strong {
+        font-size: 18px; /* Reduce font size for the comment header */
+        font-weight: bold;
+        color: #343a40;
+    }
+
+    .comment-header .like-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between; /* Adjusts content alignment */
+        align-items: center;
+        width: 100%; /* Full width to spread content */
+        padding: 8px 16px;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: bold;
+        background-color: #007bff;
+        color: white;
+        transition: background-color 0.3s;
+        text-align: left; /* Ensures text aligns to the left */
+    }
+
+    .comment-header img {
+        flex: 0 0 auto; /* Prevents the image from stretching */
+        width: 20px;
+        height: 20px;
+        margin-right: auto; /* Pushes image to the left */
+    }
+
+    .likes-count {
+        flex: 1;  
+        text-align: right;
+        margin-left: 10px; 
+        font-size: 14px; 
+    }
+
+    .delete-comment {
+        align-self: flex-end;
+        text-align: right;
+        font-size: 14px; 
+    }
+
+    .comment-header .like-button:hover {
+        background-color: #0056b3;
+    }
+
+    .comment-header span {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .comment-body {
+        color: #666;
+        font-size: 15px;
+        margin-top: 10px;
+    }
+
+    @media screen and (min-width: 768px) { /* Adjust for larger screens */
+    .card {
+        flex: 1 1 45%; /* Ensure there is enough space for two cards in a row */
+    }
+    .comment-section {
+        flex: 1 1 45%; /* Full width below the posts on larger screens */
+    }
+}
+
+    .no-comments {
+        padding: 20px;
+        text-align: center;
+        color: #666;
+        font-style: italic;
+    }
+
+    /* Sort button settings */
+    .sorting, .delete {
+        padding: 0.1rem 0.5rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: 0.25rem;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.15s ease-in-out;
+        margin-left: 20px; /* Apply consistently or adjust as needed */
+   }
+
+   .sorting:hover {
+       background-color: #0056b3;
+   }
+
+   .delete{
+    background-color: red;
+   }
+
+   .delete:hover{
+    background-color: darkred;
+   }
+    /* End styles */
+</style>
+
+<div class="container">
+    <div class="card-container">
+        {% for post in posts %}
+        <div class="card" id="card-{{ post.id }}">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{% url 'user-profile' post.author.username %}">
+                        <img class="card-img-top rounded-circle" src="{{ post.author.profile.image.url }}" alt="{{ post.author.username }}" style="height: 60px; width: 60px;">
+                    </a>
+                </div>
+                <div class="text-right">
+                    {% if post.author == user %}
+                        <div style="display: flex; align-items: center; justify-content: flex-end;">
+                            <div>
+                                <a href="{% url 'user-profile' post.author.username %}" class="text-dark">{{ post.author }}</a>
+                                <p class="card-text text-muted">{{ post.date_posted | date:"F d, Y" }}</p>
+                            </div>
+                            <button onclick="confirmDeletePost('{{ post.id }}')" class="delete">Delete</button>
+                        </div>
+                    {% else %}
+                        <div>
+                            <a href="{% url 'user-profile' post.author.username %}" class="text-dark">{{ post.author }}</a>
+                            <p class="card-text text-muted">{{ post.date_posted | date:"F d, Y" }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <hr style="margin: 0;"> <!-- Add horizontal line above the image -->
+            <div class="card-content">
+                {% if post.image.url %}
+                <img class="card-img" src="{{ post.image.url }}" alt="Post Image">
+                {% endif %}
+            </div>
+            <hr style="margin: 0;"> <!-- Add horizontal line below the image -->
+            <div class="card-caption">
+                <strong class="card-text">{{ post.content }}</strong>
+            </div>
+            <div class="card-footer">
+                <form id="like-form-{{ post.id }}" action="{% url 'like_post' post.pk %}" method="POST">
+                    {% csrf_token %}
+                    {% if user.is_authenticated %}
+                    {% if user in post.likes.all %}
+                    <button type="button" onclick="likePost('{{ post.id }}')" class="btn btn-link">
+                        <img src="https://cdn-icons-png.flaticon.com/256/81/81250.png" alt="Unlike button" class="like-icon">
+                    </button>
+                    {% else %}
+                    <button type="button" onclick="likePost('{{ post.id }}')" class="btn btn-link">
+                        <img src="https://cdn-icons-png.flaticon.com/512/126/126473.png" alt="Like button" class="like-icon">
+                    </button>
+                    {% endif %}
+                    {% else %}
+                    <small><a href="{% url 'login' %}" class="text-muted">Login to like</a></small>
+                    {% endif %}
+                    <span class="likes-count" id="likes-count-{{ post.id }}">{{ post.total_likes }} Likes</span>
+                </form>
+                <button type="button" class="btn btn-link" data-toggle="modal" data-target="#createCommentModal" data-postid="{{ post.id }}">
+                    <img src="media/chat.png" alt="Comment icon" class="comment-icon">
+                </button>
+
+            </div>
+        </div>
+        <div id="newestSort-{{ post.id }}" class="comment-section" style="display: block;">
+            <div class="comment-header">
+                <h3>Comments</h3>
+                <div>
+                    Sort by:<button type="button" class="sorting" onclick="switchView('{{ post.id }}')">Oldest First</button>
+                </div>
+            </div>
+            <hr style="margin: 5;"> <!-- Add horizontal line above the image -->
+            {% if post.comments.all %}
+                {% for comment in post.comments.all|dictsortreversed:"date_added" %}
+                <div class="comment" id="comment-{{ comment.id }}">
+                    <div class="comment-header">
+                        <strong>{{ comment.name }} - {{ comment.date_added | date:"m/d/y P" }}</strong>
+                        {% if comment.name == user.username %}
+                            <button onclick="deleteComment('{{ comment.id }}')" class="delete delete-comment">Delete</button>
+                        {% endif %}
+                        <div>
+                            <button type="button" class="like-button" data-comment-id="{{ comment.id }}" data-csrf-token="{{ csrf_token }}">
+                                <img id="like-comment-{{ comment.id }}" src="{% if user in comment.likes.all %}https://cdn-icons-png.flaticon.com/256/81/81250.png{% else %}https://cdn-icons-png.flaticon.com/512/126/126473.png{% endif %}" alt="Like button">
+                                <span class="likes-count" id="likes-count-comment-{{ comment.id }}" style="color: black;">{{ comment.likes.count }}</span>
+                            </button>
+                        </div>
+                    </div>
+                    <hr style="margin: 0;">
+                    <div class="comment-body" style="color: black;">
+                        {{ comment.body }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="no-comments">No comments yet.</p>
+            {% endif %}
+        </div>
+        <div id="oldestSort-{{ post.id }}" class="comment-section" style="display: none;">
+            <div class="comment-header">
+                <h3>Comments</h3>
+                <div>
+                    Sort by:<button type="button" class="sorting" onclick="switchView('{{ post.id }}')">Newest First</button>
+                </div>
+            </div>
+            <hr style="margin: 5;"> <!-- Add horizontal line above the image -->
+            {% if post.comments.all %}
+                {% for comment in post.comments.all|dictsort:"date_added" %}
+                <div class="comment" id="comment-{{ comment.id }}0">
+                    <div class="comment-header">
+                        <strong>{{ comment.name }} - {{ comment.date_added | date:"m/d/y P" }}</strong>
+                        {% if comment.name == user.username %}
+                            <button onclick="deleteComment('{{ comment.id }}')" class="delete delete-comment">Delete</button>
+                        {% endif %}
+                        <div>
+                            <button type="button" class="like-button" data-comment-id="{{ comment.id }}" data-csrf-token="{{ csrf_token }}">
+                                <img id="like-comment-{{ comment.id }}" src="{% if user in comment.likes.all %}https://cdn-icons-png.flaticon.com/256/81/81250.png{% else %}https://cdn-icons-png.flaticon.com/512/126/126473.png{% endif %}" alt="Like button">
+                                <span class="likes-count" id="likes-count-comment-{{ comment.id }}" style="color: black;">{{ comment.likes.count }}</span>
+                            </button>
+                        </div>
+                    </div>
+                    <hr style="margin: 0;">
+                    <div class="comment-body" style="color: black;">
+                        {{ comment.body }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="no-comments">No comments yet.</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+
+<div class="container">
+    <div class="card-container">
+        {% for post in allposts %}
+        <div class="card">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{% url 'user-profile' post.author.username %}">
+                        <img class="card-img-top rounded-circle" src="{{ post.author.profile.image.url }}" alt="{{ post.author.username }}" style="height: 60px; width: 60px;">
+                    </a>
+                </div>
+                <div class="text-right">
+                    <div>
+                        <a href="{% url 'user-profile' post.author.username %}" class="text-dark">{{ post.author }}</a>
+                    </div>
+                    <div>
+                        <p class="card-text text-muted">{{ post.date_posted | date:"F d, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+            <hr style="margin: 0;"> <!-- Add horizontal line above the image -->
+            <div class="card-content">
+                {% if post.image.url %}
+                <a href="{% url 'post-detail' post.id %}">
+                    <img class="card-img" src="{{ post.image.url }}" alt="Post Image">
+                </a>
+                {% endif %}
+            </div>
+            <hr style="margin: 0;"> <!-- Add horizontal line below the image -->
+            <div class="card-caption">
+                <strong class="card-text">{{ post.content }}</strong>
+            </div>
+            <div class="card-footer">
+                <form id="like-form-{{ post.id }}" action="{% url 'like_post' post.pk %}" method="POST">
+                    {% csrf_token %}
+                    {% if user.is_authenticated %}
+                    {% if user in post.likes.all %}
+                    <button type="button" onclick="likePost('{{ post.id }}')" class="btn btn-link">
+                        <img src="https://cdn-icons-png.flaticon.com/256/81/81250.png" alt="Unlike button" class="like-icon">
+                    </button>
+                    {% else %}
+                    <button type="button" onclick="likePost('{{ post.id }}')" class="btn btn-link">
+                        <img src="https://cdn-icons-png.flaticon.com/512/126/126473.png" alt="Like button" class="like-icon">
+                    </button>
+                    {% endif %}
+                    {% else %}
+                    <small><a href="{% url 'login' %}" class="text-muted">Login to like</a></small>
+                    {% endif %}
+                    <span class="likes-count" id="likes-count-{{ post.id }}">{{ post.total_likes }}</span>
+                </form>
+                <button type="button" class="btn btn-link" data-toggle="modal" data-target="#createCommentModal" data-postid="{{ post.id }}">
+                    <img src="media/chat.png" alt="Comment icon" class="comment-icon">
+                </button>
+            </div>
+        </div>
+        <div id="newestSort-{{ post.id }}" class="comment-section" style="display: block;">
+            <div class="comment-header">
+                <h3>Comments</h3>
+                <div>
+                    Sort by:<button type="button" class="sorting" onclick="switchView('{{ post.id }}')">Oldest First</button>
+                </div>
+            </div>
+            <hr style="margin: 5;"> <!-- Add horizontal line above the image -->
+            {% if post.comments.all %}
+                {% for comment in post.comments.all|dictsortreversed:"date_added" %}
+                <div class="comment" id="comment-{{ comment.id }}">
+                    <div class="comment-header">
+                        <strong>{{ comment.name }} - {{ comment.date_added | date:"m/d/y P" }}</strong>
+                        {% if comment.name == user.username %}
+                            <button onclick="deleteComment('{{ comment.id }}')" class="delete delete-comment">Delete</button>
+                        {% endif %}
+                        <div>
+                            <button type="button" class="like-button" data-comment-id="{{ comment.id }}" data-csrf-token="{{ csrf_token }}">
+                                <img id="like-comment-{{ comment.id }}" src="{% if user in comment.likes.all %}https://cdn-icons-png.flaticon.com/256/81/81250.png{% else %}https://cdn-icons-png.flaticon.com/512/126/126473.png{% endif %}" alt="Like button">
+                                <span class="likes-count" id="likes-count-comment-{{ comment.id }}" style="color: black;">{{ comment.likes.count }}</span>
+                            </button>
+                        </div>
+                    </div>
+                    <hr style="margin: 0;">
+                    <div class="comment-body">
+                        {{ comment.body }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="no-comments">No comments yet.</p>
+            {% endif %}
+        </div>
+        <div id="oldestSort-{{ post.id }}" class="comment-section" style="display: none;">
+            <div class="comment-header">
+                <h3>Comments</h3>
+                <div>
+                    Sort by:<button type="button" class="sorting" onclick="switchView('{{ post.id }}')">Newest First</button>
+                </div>
+            </div>
+            <hr style="margin: 5;"> <!-- Add horizontal line above the image -->
+            {% if post.comments.all %} 
+                {% for comment in post.comments.all|dictsort:"date_added" %}
+                <div class="comment" id="comment-{{ comment.id }}0">
+                    <div class="comment-header">
+                        <strong>{{ comment.name }} - {{ comment.date_added | date:"m/d/y P" }}</strong>
+                        {% if comment.name == user.username %}
+                            <button onclick="deleteComment('{{ comment.id }}')" class="delete delete-comment">Delete</button>
+                        {% endif %}
+                        <div>
+                            <button type="button" class="like-button" data-comment-id="{{ comment.id }}" data-csrf-token="{{ csrf_token }}">
+                                <img id="like-comment-{{ comment.id }}" src="{% if user in comment.likes.all %}https://cdn-icons-png.flaticon.com/256/81/81250.png{% else %}https://cdn-icons-png.flaticon.com/512/126/126473.png{% endif %}" alt="Like button">
+                                <span class="likes-count" id="likes-count-comment-{{ comment.id }}" style="color: black;">{{ comment.likes.count }}</span>
+                            </button>
+                        </div>
+                    </div>
+                    <hr style="margin: 0;">
+                    <div class="comment-body">
+                        {{ comment.body }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="no-comments">No comments yet.</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Comment Modal -->
+    <div class="modal fade" id="createCommentModal" tabindex="-1" role="dialog" aria-labelledby="createCommentModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <!-- Modal content will be loaded here by the JavaScript below -->
+            </div>
+        </div>
+    </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    function attachLikeButtonListeners() {
+        document.querySelectorAll('.like-button').forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent form submission
+                var commentId = button.getAttribute('data-comment-id');
+                var csrfToken = button.getAttribute('data-csrf-token');
+                likeComment(commentId, csrfToken);
+            });
+        });
+    }
+
+    function likePost(postId) {
+        var form = document.getElementById('like-form-' + postId);
+        var likesCount = document.getElementById('likes-count-' + postId);
+        var likeButton = form.querySelector('button[type="button"]');
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', form.action, true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var response = JSON.parse(xhr.responseText);
+                if (response.liked) {
+                    likeButton.innerHTML = '<img src="https://cdn-icons-png.flaticon.com/256/81/81250.png" alt="Unlike button" class="like-icon">';
+                } else {
+                    likeButton.innerHTML = '<img src="https://cdn-icons-png.flaticon.com/512/126/126473.png" alt="Like button" class="like-icon">';
+                }
+                likesCount.innerHTML = response.total_likes + ' Likes';
+            }
+        };
+        xhr.send('post_id=' + postId + '&csrfmiddlewaretoken={{ csrf_token }}');
+    }
+
+    function likeComment(commentId, csrfToken) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/comments/' + commentId + '/like/', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var response = JSON.parse(xhr.responseText);
+
+                document.querySelectorAll(`#like-comment-${commentId}`).forEach(function(img) {
+                    img.src = response.liked ? 'https://cdn-icons-png.flaticon.com/256/81/81250.png' : 'https://cdn-icons-png.flaticon.com/512/126/126473.png';
+                });
+
+                document.querySelectorAll(`#likes-count-comment-${commentId}`).forEach(function(span) {
+                    span.innerHTML = response.total_likes;
+                });
+
+                console.log("Response received:", response);
+            }
+        };
+        xhr.send('csrfmiddlewaretoken=' + csrfToken + '&comment_id=' + commentId);
+    }
+
+    function deleteComment(commentId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/comments/' + commentId + '/delete/',
+                type: 'POST', // Ensure this matches your server's expected HTTP method
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}', // Ensure CSRF token is sent with the request for Django
+                    comment_id: commentId // Optionally send the comment ID if needed on the server side
+                },
+                success: function() {
+                    // Remove the comment from both sort orders
+                    $(`#comment-${commentId}`).fadeOut(500, function() { $(this).remove(); });
+                    $(`#comment-${commentId}0`).fadeOut(500, function() { $(this).remove(); });
+                    // Check if any comments remain in either view and update UI accordingly
+                    updateCommentsVisibility();
+                },
+                error: function() {
+                    Swal.fire(
+                        'Failed!',
+                        'There was an error deleting the comment.',
+                        'error'
+                    );
+                }
+            });
+        }
+    });
+}
+
+function updateCommentsVisibility() {
+    // Iterate over all post IDs to update their comment sections
+    document.querySelectorAll('.post-id').forEach(function(postElement) {
+        let postId = postElement.getAttribute('data-post-id');
+        let newestSortDiv = document.getElementById(`newestSort-${postId}`);
+        let oldestSortDiv = document.getElementById(`oldestSort-${postId}`);
+        if (!newestSortDiv.children.length) {
+            newestSortDiv.innerHTML = '<p class="no-comments">No comments yet.</p>';
+        }
+        if (!oldestSortDiv.children.length) {
+            oldestSortDiv.innerHTML = '<p class="no-comments">No comments yet.</p>';
+        }
+    });
+}
+
+
+    function switchView(postId) {
+        var newestSort = document.getElementById('newestSort-' + postId);
+        var oldestSort = document.getElementById('oldestSort-' + postId);
+        
+        if (newestSort.style.display === 'block') {
+            newestSort.style.display = 'none';
+            oldestSort.style.display = 'block';
+        } else {
+            newestSort.style.display = 'block';
+            oldestSort.style.display = 'none';
+        }
+    }
+
+    function confirmDeletePost(postId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                deletePost(postId);
+            }
+        });
+    }
+
+    function deletePost(postId) {
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value; // CSRF token retrieval
+
+        $.ajax({
+            url: `/post/${postId}/delete/`, // Adjust as necessary to match your URL setup
+            type: 'POST',
+            data: {
+                csrfmiddlewaretoken: csrftoken,
+                post_id: postId
+            },
+            success: function(response) {
+                Swal.fire(
+                    'Deleted!',
+                    'Your post has been deleted.',
+                    'success'
+                );
+                document.querySelector(`#card-${postId}`).style.transition = 'opacity 0.5s';
+                document.querySelector(`#card-${postId}`).style.opacity = '0';
+                setTimeout(function() {
+                    document.querySelector(`#card-${postId}`).remove();
+                }, 500); // Delay to allow fade out effect
+
+                document.querySelector(`#newestSort-${postId}`).style.transition = 'opacity 0.5s';
+                document.querySelector(`#newestSort-${postId}`).style.opacity = '0';
+                setTimeout(function() {
+                    document.querySelector(`#newestSort-${postId}`).remove();
+                }, 500); // Delay to allow fade out effect
+
+                document.querySelector(`#oldestSort-${postId}`).style.transition = 'opacity 0.5s';
+                document.querySelector(`#oldestSort-${postId}`).style.opacity = '0';
+                setTimeout(function() {
+                    document.querySelector(`#oldestSort-${postId}`).remove();
+                }, 500); // Delay to allow fade out effect
+            },
+            error: function() {
+                Swal.fire(
+                    'Failed!',
+                    'There was an error deleting the post.',
+                    'error'
+                );
+            }
+        });
+    }
+
+    // Ensure jQuery is loaded
+$(document).ready(function() {
+    $('#createCommentModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);  // Button that triggered the modal
+        var postId = button.data('postid');  // Extract info from data-* attributes
+        var modal = $(this);
+
+        // Fetch and load the form for creating a new comment
+        $.ajax({
+            url: `/post/${postId}/comment/`,  // Ensure this is the correct endpoint
+            success: function(data) {
+                modal.find('.modal-content').html(data);
+            },
+            error: function() {
+                console.error('Failed to load the modal content.');
+            }
+        });
+    });
+
+    // Attach event listeners to each like button in the comments
+    document.querySelectorAll('.like-button').forEach(function(button) {
+        button.addEventListener('click', function(event) {
+            event.preventDefault(); // Stop the button from submitting the form
+            var commentId = event.currentTarget.getAttribute('data-comment-id'); // Get the comment ID stored in data attribute
+            var csrfToken = event.currentTarget.getAttribute('data-csrf-token'); // Get the CSRF token from the data attribute
+            likeComment(commentId, csrfToken);
+        });
+    });
+});
+
+
+    // Event to handle the form submission for creating a new comment
+    $(document).on('submit', '#createCommentForm', function (event) {
+        event.preventDefault();
+        var form = $(this);
+        $.ajax({
+            type: form.attr('method'),
+            url: form.attr('action'),
+            data: form.serialize(),
+            success: function (response) {
+                if(response.success) {
+                    $('#createCommentModal').modal('hide'); // Hide the modal
+                    location.reload(); // Reload the page to reflect the new comment
+                }
+            },
+            error: function (response) {
+                // Handle form errors here
+            }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Attach event listeners to each like button in the comments
+        document.querySelectorAll('.like-button').forEach(function(button) {
+            button.addEventListener('click', function(event) {
+                event.preventDefault(); // Stop the button from submitting the form
+                var commentId = event.currentTarget.getAttribute('data-comment-id'); // Get the comment ID stored in data attribute
+                var csrfToken = event.currentTarget.getAttribute('data-csrf-token'); // Get the CSRF token from the data attribute
+                console.log("Comment ID:", commentId);
+                likeComment(commentId, csrfToken);
+            });
+        });
+    });
+</script>
 {% endblock content %}

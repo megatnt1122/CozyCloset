@@ -5,11 +5,10 @@ from django.urls import reverse
 from PIL import Image
 
 class Post(models.Model):
-    title = models.CharField(blank=True, max_length=100)
     content = models.TextField(blank=True)
     date_posted = models.DateTimeField(default=timezone.now)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    image = models.ImageField(default='', null=True, blank=True, upload_to='post_photos')
+    image = models.ImageField(default='', null=True, upload_to='post_photos')
     likes = models.ManyToManyField(User, related_name='blog_posts')
     
     def total_likes(self):
@@ -19,7 +18,6 @@ class Post(models.Model):
         return self.title
     
     def save(self, *args, **kwargs):
-        self.name = self.title.title()
         super(Post, self).save(*args, **kwargs)
         try:
             img = Image.open(self.image.path)
@@ -31,7 +29,7 @@ class Post(models.Model):
             pass
     
     def get_absolute_url(self):
-        return reverse('post-detail', kwargs={'pk': self.pk})
+        return reverse('blog-home')
 
 # Models for uploading
 class clothingCategories(models.Model):
@@ -67,9 +65,10 @@ class userClothes(models.Model):
         self.name = self.name.title()
         super(userClothes, self).save(*args, **kwargs)
         img = Image.open(self.image.path)
-        output_size = (1200, 1200)
-        img.thumbnail(output_size)
-        img.save(self.image.path)
+        if img.width > 1440 or img.height > 1440:
+            output_size = (1200, 1200)
+            img.thumbnail(output_size)
+            img.save(self.image.path)
 
     def get_absolute_url(self):
         return '/upload/'
@@ -121,10 +120,10 @@ class Convo(models.Model):
     members = models.ManyToManyField(User, related_name='convos')
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
+    last_message = models.CharField(max_length=255, null=True, blank=True, default='')
 
     class Meta:
         ordering = ('-modified_at',)
-
 
 class ConvoMessage(models.Model):
     conversing = models.ForeignKey(Convo, related_name='convoMessage', on_delete=models.CASCADE, default=1)
@@ -135,9 +134,23 @@ class ConvoMessage(models.Model):
 class Comment(models.Model):
     post = models.ForeignKey(Post,related_name="comments", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
-    #commentuser = models.ForeignKey(User, related_name='created_comment', on_delete=models.CASCADE, default=1)
-    body = models.TextField()
+    body = models.TextField(max_length=255, verbose_name='')
     date_added = models.DateTimeField(auto_now_add=True)
+    likes = models.ManyToManyField(User, related_name='liked_comments', blank=True)  # New field for likes
     
     def __str__(self):
         return '%s - %s' % (self.post.title, self.name)
+
+    def get_absolute_url(self):
+        return reverse('blog-home')
+
+class Follow(models.Model):
+    follower = models.ForeignKey(User, related_name='following', on_delete=models.CASCADE)
+    followed = models.ForeignKey(User, related_name='followers', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('follower', 'followed')  # Ensure unique follow relationships
+
+    def __str__(self):
+        return f"{self.follower.username} follows {self.followed.username}"

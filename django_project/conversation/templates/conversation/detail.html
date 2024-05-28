@@ -3,23 +3,124 @@
 {% block title %}Conversation{% endblock %}
 
 {% block content %}
-<h1 class="mb-6 text-3xl">Conversation</h1>
+<style>
+    .mcontainer {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f9f9f9;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .message-container {
+        display: flex;
+        flex-direction: column; /* Reverse order to show latest messages at the top */
+        overflow: auto;
+    }
+    .message-box {
+        display: flex; /* Added to allow avatar and message to display side by side */
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        max-width: 70%; /* Limit message width for readability */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        text-align: left; /* Ensure messages go left to right */
+    }
+    .user-message {
+        background-color: rgba(0, 123, 255, 0.5); /* Semi-transparent blue for user's messages */
+        color: black; /* White text for contrast */
+        align-self: flex-end; /* Align user's message to the right */
+        text-align: left; /* Ensure text alignment for user messages */
+    }
+    .other-message {
+        background-color: #ffffff; /* White background for other's messages */
+        color: #333; /* Dark text for contrast */
+        align-self: flex-start; /* Align other's messages to the left */
+        text-align: left; /* Ensure text alignment for other messages */
+        border: 1px solid #eee;
+    }
+    .message-meta {
+        font-size: 0.85rem;
+        color: black;
+        margin-bottom: 5px;
+    }
+    .message-content p {
+        margin: 0; /* Remove default margins for paragraphs */
+        word-wrap: break-word;
+    }
+    .message-form {
+        display: flex;
+        align-items: center;
+        margin-top: 20px;
+    }
+    .message-form textarea {
+        flex-grow: 1;
+        margin-right: 15px;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        padding: 10px;
+        resize: none;
+        height: 50px; /* Increase height for easier typing */
+        max-width: calc(100% - 100px); /* Adjust width for responsiveness */
+    }
+    .message-form button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .message-form button:hover {
+        background-color: #0056b3;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .avatar {
+        border-radius: 50%;
+        width: 40px; /* Adjust avatar size */
+        height: 40px; /* Adjust avatar size */
+    }
+    .avatar-container {
+        display: flex;
+        align-items: flex-start;
+    }
+    .user-avatar {
+        margin-left: auto; /* Move user avatar to the right */
+        margin-right: 12px;
+    }
+    .other-avatar {
+        margin-right: 12px; /* Move other avatar to the left */
+        margin-left: auto;
+    }
+</style>
+<div class="mcontainer">
+    <h1 class="mb-6 text-3xl text-center">Conversation</h1>
 
-<div class="space-y-6">
-    {% for message in conversation.messages.all %}
-        <div class="p-6 flex {% if message.created_by == request.user %}bg-blue-100{% else bg-gray-100 %} rounded-xl">
-            <div>
-                <p class="mb-4"><strong>{{ message.created_by.username }}</strong> @ {{ message.created_at }}</p>
-                <p>{{ message.content }}</p>
+    <div class="message-container">
+        {% for message in conversation.messages.all %}
+            <div class="message-box {% if message.created_by == request.user %}user-message{% else %}other-message{% endif %}">
+                <div class="avatar-container">
+                    {% if message.created_by == request.user %}
+                        <img class="rounded-circle avatar user-avatar" src="{{ request.user.profile.image.url }}">
+                    {% else %}
+                        <img class="rounded-circle avatar other-avatar" src="{{ recipient.profile.image.url }}">
+                    {% endif %}
+                </div>
+                <div>
+                    <p class="message-meta"><strong>{{ message.created_by.username }}</strong> @ {{ message.created_at|date:"N j, Y, P" }}</p>
+                    <p class="message-content">{{ message.content }}</p>
+                </div>
             </div>
-        </div>
-    {% endfor %}
+        {% endfor %}
+    </div>
+
+
+    <form method="post" action="" class="message-form">
+        {% csrf_token %}
+        {{ form.content }}
+        <button type="submit">Send</button>
+    </form>
 </div>
-
-<form method="post" action="." class="mt-6">
-    {% csrf_token %}
-
-    {{ form.as_p }}
-    <button class="pt-4 px-8 text-lg bg-teal-500 hover:bg-teal-700 rounded-xl text-white">Send</button>
-</form>
 {% endblock %}

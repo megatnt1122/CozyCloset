@@ -1,5 +1,29 @@
 from django import forms
 from .models import *
+from django import forms
+from django.core.files import File
+from urllib.request import urlopen
+from tempfile import NamedTemporaryFile
+from .models import Post
+
+class SingleLineTextField(forms.CharField):
+    widget = forms.TextInput
+
+class PostForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = ['content', 'image']
+
+    def __init__(self, *args, **kwargs):
+        shareditem = kwargs.pop('shareditem', None)
+        super(PostForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if isinstance(field, forms.CharField) and not isinstance(field.widget, forms.Textarea):
+                field.widget = forms.TextInput()
+        if shareditem:
+            self.fields['image'].initial = shareditem.image
+            self.fields['image'].widget = forms.HiddenInput()  # Hide the image field when shareditem is present
+
 
 class OutfitForm(forms.ModelForm):
     class Meta:
@@ -20,16 +44,20 @@ class DirectMessagingForm(forms.ModelForm):
     class Meta:
         model = ConvoMessage
         fields = ['content',]
-        widgets = {
-            'content': forms.Textarea(attrs={
-                'class': 'w-full py-4 px-6 rounded-xl border'
-            })
-        }
+    
+    def __init__(self, *args, **kwargs):
+        super(DirectMessagingForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if isinstance(field, forms.CharField) and not isinstance(field.widget, forms.Textarea):
+                field.widget = forms.TextInput()
+
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['body']
         
-        widgets = {
-            'body': forms.Textarea(attrs={'class': 'form-control'})
-        }
+    def __init__(self, *args, **kwargs):
+        super(CommentForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if isinstance(field, forms.CharField) and not isinstance(field.widget, forms.Textarea):
+                field.widget = forms.TextInput()
